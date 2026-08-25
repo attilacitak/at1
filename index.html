@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Needoh Squish World</title>
+<style>
+  :root{
+    --bg1:#11162a;
+    --bg2:#24133d;
+    --panel:rgba(255,255,255,.09);
+    --panel2:rgba(255,255,255,.14);
+    --text:#fff;
+    --muted:#c8c7d7;
+    --accent:#7cf7d4;
+    --gold:#ffd95e;
+    --danger:#ff5c7a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--text);
+    font-family:Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(105,255,220,.17), transparent 25%),
+      radial-gradient(circle at 85% 15%, rgba(209,107,255,.19), transparent 28%),
+      radial-gradient(circle at 50% 100%, rgba(255,102,159,.15), transparent 35%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+  }
+  button{font:inherit}
+  .app{max-width:1450px;margin:auto;padding:18px}
+  .topbar{
+    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    background:rgba(0,0,0,.23); border:1px solid rgba(255,255,255,.12);
+    padding:13px 15px;border-radius:20px;backdrop-filter:blur(12px);position:sticky;top:8px;z-index:10;
+  }
+  .brand{font-weight:900;font-size:clamp(20px,3vw,30px);letter-spacing:-.6px}
+  .brand span{color:var(--accent)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{
+    background:rgba(255,255,255,.08);padding:9px 12px;border-radius:14px;font-weight:800;white-space:nowrap
+  }
+  .toolbar{display:flex;gap:8px}
+  .btn{
+    border:0; color:white; background:rgba(255,255,255,.12); padding:10px 13px; border-radius:13px;
+    cursor:pointer; font-weight:800; transition:.16s transform,.16s background;
+  }
+  .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.18)}
+  .btn.primary{background:linear-gradient(135deg,#1fd5a9,#6467ff)}
+  .btn.gold{background:linear-gradient(135deg,#ffbb33,#ff7b54);color:#271907}
+  .btn.danger{background:linear-gradient(135deg,#ff4770,#cf3cff)}
+  .layout{
+    display:grid;grid-template-columns:minmax(0,1.25fr) minmax(330px,.75fr);gap:16px;margin-top:16px;
+  }
+  .panel{
+    background:var(--panel); border:1px solid rgba(255,255,255,.12); border-radius:24px;
+    backdrop-filter:blur(14px); box-shadow:0 20px 70px rgba(0,0,0,.25);
+  }
+  .main{padding:18px}
+  .section-title{margin:0 0 10px;font-size:19px}
+  .world-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .world-badge{
+    display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);
+    padding:8px 12px;border-radius:999px;font-weight:900;
+  }
+  .game-stage{
+    min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    position:relative;overflow:hidden;border-radius:20px;margin-top:10px;
+    background:radial-gradient(circle,rgba(255,255,255,.08),transparent 58%);
+    user-select:none;touch-action:none;
+  }
+  .floating{position:absolute;pointer-events:none;font-weight:900;font-size:22px;animation:floatUp .85s ease-out forwards}
+  @keyframes floatUp{to{transform:translateY(-90px) scale(1.18);opacity:0}}
+  .needoh-wrap{position:relative;width:290px;height:290px;display:grid;place-items:center}
+  .needoh{
+    width:210px;height:210px;border-radius:48% 52% 47% 53% / 55% 42% 58% 45%;
+    cursor:pointer; position:relative; transition:filter .2s, width .2s, height .2s;
+    animation:spin 12s linear infinite;
+    box-shadow:inset -22px -24px 40px rgba(0,0,0,.18), inset 20px 20px 35px rgba(255,255,255,.18),
+               0 0 45px var(--glow);
+  }
+  .needoh::before{
+    content:"";position:absolute;width:34%;height:22%;left:18%;top:15%;border-radius:50%;
+    background:rgba(255,255,255,.23);transform:rotate(-25deg);filter:blur(2px)
+  }
+  .needoh.squishing{animation:squish .18s ease-in-out, spin 12s linear infinite}
+  @keyframes squish{
+    0%{transform:scale(1)}
+    45%{transform:scaleX(1.18) scaleY(.72) rotate(4deg)}
+    100%{transform:scale(1)}
+  }
+  @keyframes spin{to{rotate:360deg}}
+  .rarity-label{font-size:28px;font-weight:1000;margin-top:4px;text-shadow:0 0 18px currentColor}
+  .mult{font-weight:800;color:var(--muted);margin:4px 0 15px}
+  .holdhint{font-size:13px;color:var(--muted)}
+  .progress{
+    width:min(420px,88%);height:11px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:14px auto 4px
+  }
+  .progress > div{height:100%;background:linear-gradient(90deg,#6fe4ff,#c977ff,#ff9ec6);width:0%}
+  .upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .upgrade{
+    padding:14px;text-align:left;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
+    border-radius:16px;color:#fff;cursor:pointer
+  }
+  .upgrade:hover{background:rgba(255,255,255,.13)}
+  .upgrade strong{display:block;font-size:16px}
+  .upgrade small{color:var(--muted)}
+  .upgrade .price{margin-top:8px;font-weight:900;color:var(--gold)}
+  .side{padding:16px;display:flex;flex-direction:column;gap:14px}
+  .market-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .timer{font-weight:900;background:rgba(0,0,0,.22);padding:8px 10px;border-radius:12px}
+  .pity{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pity-card{background:rgba(0,0,0,.18);padding:9px;border-radius:13px;text-align:center;font-size:12px}
+  .pity-card b{display:block;font-size:18px}
+  .market{display:grid;gap:9px}
+  .item{
+    display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;
+    background:rgba(0,0,0,.17);border:1px solid rgba(255,255,255,.09);padding:10px;border-radius:16px
+  }
+  .mini{
+    width:47px;height:47px;background:var(--c);box-shadow:0 0 18px var(--g), inset -8px -8px 14px rgba(0,0,0,.2);
+    border-radius:var(--shape);
+  }
+  .item h4{margin:0 0 3px}
+  .item p{margin:0;color:var(--muted);font-size:12px}
+  .buy{border:0;border-radius:12px;background:rgba(255,255,255,.13);color:white;font-weight:900;padding:9px 10px;cursor:pointer}
+  .buy:disabled{opacity:.38;cursor:not-allowed}
+  .collection{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);padding:7px 9px;border-radius:999px;
+    font-size:12px;font-weight:800;cursor:pointer
+  }
+  .chip.active{outline:2px solid white}
+  .locked{
+    text-align:center;padding:18px;background:rgba(0,0,0,.18);border-radius:18px
+  }
+  .world2{
+    background:linear-gradient(135deg,rgba(255,102,62,.15),rgba(137,55,255,.16))
+  }
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:#0e1120;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:11px 15px;
+    opacity:0;pointer-events:none;transition:.2s;z-index:50;font-weight:800
+  }
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .footer-note{font-size:12px;color:#aaa8c2;text-align:center;margin:12px 0 4px}
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .game-stage{min-height:450px}
+  }
+  @media(max-width:520px){
+    .app{padding:10px}
+    .upgrade-grid{grid-template-columns:1fr}
+    .needoh-wrap{width:240px;height:240px}
+    .needoh{width:175px;height:175px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">🫧 Needoh <span>Squish World</span></div>
+    <div class="stats">
+      <div class="stat">🪙 <span id="coins">0</span></div>
+      <div class="stat">🫧 Squishes: <span id="squishes">0</span></div>
+      <div class="stat">⚡ /Squish: <span id="perSquish">1</span></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="soundBtn">🔊 Sound ON</button>
+      <button class="btn" id="saveBtn">💾 Save</button>
+      <button class="btn danger" id="resetBtn">↻ Reset</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="panel main">
+      <div class="world-row">
+        <div>
+          <h2 class="section-title">Main Squish Zone</h2>
+          <div class="world-badge" id="worldBadge">🌎 World 1</div>
+        </div>
+        <button class="btn gold" id="worldBtn">🔒 World 2 — 1,000,000 🪙</button>
+      </div>
+
+      <section class="game-stage" id="stage">
+        <div class="needoh-wrap">
+          <div id="needoh" class="needoh"></div>
+        </div>
+        <div class="rarity-label" id="rarityLabel">⚪ Common</div>
+        <div class="mult" id="rarityMult">Squishy multiplier ×1</div>
+        <div class="holdhint">Click, tap, or hold to squish</div>
+        <div class="progress"><div id="worldProgress"></div></div>
+        <div class="holdhint" id="progressText">0 / 1,000,000 coins to World 2</div>
+      </section>
+
+      <h2 class="section-title">⬆️ Upgrades</h2>
+      <div class="upgrade-grid">
+        <button class="upgrade" id="clickUpgrade">
+          <strong>👆 Click Power</strong>
+          <small>+1 base coin per squish</small>
+          <div class="price" id="clickPrice"></div>
+        </button>
+        <button class="upgrade" id="multUpgrade">
+          <strong>✖️ Base Multiplier</strong>
+          <small>Multiply all squish earnings by +25%</small>
+          <div class="price" id="multPrice"></div>
+        </button>
+      </div>
+
+      <h2 class="section-title" style="margin-top:18px">🎒 Your Squishies</h2>
+      <div class="collection" id="collection"></div>
+    </main>
+
+    <aside class="panel side" id="marketPanel">
+      <div class="market-header">
+        <div>
+          <h2 class="section-title" style="margin:0">🛒 Market</h2>
+          <div style="font-size:12px;color:var(--muted)">Prices stay fixed until restock.</div>
+        </div>
+        <div class="timer">⏱ <span id="timer">1:00</span></div>
+      </div>
+
+      <div class="pity" id="pityWrap">
+        <div class="pity-card">🩷 Mythic<b id="pityMythic">8</b></div>
+        <div class="pity-card">🟡 Legendary<b id="pityLegendary">12</b></div>
+        <div class="pity-card">🔴 Secret<b id="pitySecret">20</b></div>
+      </div>
+
+      <div id="market" class="market"></div>
+
+      <div id="world2Info" class="locked world2">
+        <b>🌊 World 2</b><br>
+        Unlock at <b>1,000,000 coins</b> for 🔥 Insane, ☠️ Impossible, and 👑 Godly squishies.
+      </div>
+      <div id="world3Info" class="locked world2" style="background:linear-gradient(135deg,rgba(255,20,70,.17),rgba(255,238,130,.12));">
+        <b>🌌 World 3</b><br>
+        Unlock at <b>10,000,000,000 coins</b> for 💀 Deathly, 😇 Heavenly, and 👹 Final Boss squishies.
+      </div>
+      <div class="footer-note">Progress auto-saves in your browser.</div>
+    </aside>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const W1 = [
+  {name:"Common", icon:"⚪", color:"#e9f1ff", glow:"#ffffff88", mult:1, chance:46, min:50, max:110, shape:"48% 52% 47% 53% / 55% 42% 58% 45%", sound:170},
+  {name:"Uncommon", icon:"🟢", color:"#52e38a", glow:"#52e38aaa", mult:2, chance:25, min:180, max:330, shape:"42% 58% 62% 38% / 48% 44% 56% 52%", sound:220},
+  {name:"Rare", icon:"🔵", color:"#4ca6ff", glow:"#4ca6ffbb", mult:5, chance:14, min:700, max:1200, shape:"55% 45% 52% 48% / 38% 57% 43% 62%", sound:285},
+  {name:"Epic", icon:"🟣", color:"#a35cff", glow:"#a35cffcc", mult:12, chance:8, min:3000, max:5200, shape:"34% 66% 37% 63% / 64% 35% 65% 36%", sound:360},
+  {name:"Mythic", icon:"🩷", color:"#ff74bd", glow:"#ff74bdd9", mult:30, chance:4, min:14000, max:24000, shape:"62% 38% 66% 34% / 44% 59% 41% 56%", sound:490},
+  {name:"Legendary", icon:"🟡", color:"#ffd94c", glow:"#ffd94ce6", mult:80, chance:2.2, min:65000, max:95000, shape:"50% 50% 36% 64% / 63% 37% 63% 37%", sound:115},
+  {name:"Secret", icon:"🔴", color:"#ff3b5f", glow:"#ff315ff2", mult:250, chance:.8, min:260000, max:430000, shape:"29% 71% 47% 53% / 57% 32% 68% 43%", sound:85},
+];
+
+const W2 = [
+  {name:"Insane", icon:"🔥", color:"#ff6a38", glow:"#ff6338ee", mult:800, chance:72, min:1200000, max:1900000, shape:"70% 30% 38% 62% / 51% 69% 31% 49%", sound:540},
+  {name:"Impossible", icon:"☠️", color:"#d8d8e8", glow:"#d1c9ffdd", mult:3000, chance:24, min:5200000, max:8000000, shape:"31% 69% 70% 30% / 65% 44% 56% 35%", sound:72},
+  {name:"Godly", icon:"👑", color:"#fff06b", glow:"#fff06bff", mult:15000, chance:4, min:25000000, max:40000000, shape:"50% 50% 72% 28% / 33% 66% 34% 67%", sound:620},
+];
+
+const W3 = [
+  {name:"Deathly", icon:"💀", color:"#202020", glow:"#ff2b4fee", mult:75000, chance:72, min:15000000000, max:24000000000, shape:"36% 64% 61% 39% / 69% 34% 66% 31%", sound:58},
+  {name:"Heavenly", icon:"😇", color:"#eaf8ff", glow:"#8ee7ffff", mult:300000, chance:24, min:60000000000, max:90000000000, shape:"63% 37% 42% 58% / 36% 68% 32% 64%", sound:760},
+  {name:"Final Boss", icon:"👹", color:"#8f111f", glow:"#ff1744ff", mult:1500000, chance:4, min:300000000000, max:500000000000, shape:"26% 74% 68% 32% / 72% 28% 72% 28%", sound:42},
+];
+
+let state = {
+  coins:0, squishes:0, clickPower:1, baseMult:1, clickLevel:0, multLevel:0,
+  owned:["Common"], selected:"Common", sound:true, world:1, world2Unlocked:false, world3Unlocked:false,
+  pity:{Mythic:8, Legendary:12, Secret:20}, stock:[], restockAt:Date.now()+60000
+};
+
+const $ = id => document.getElementById(id);
+let audioCtx = null;
+let holdTimer = null;
+
+function fmt(n){
+  if(n < 1000) return Math.floor(n).toLocaleString();
+  const units=[["T",1e12],["B",1e9],["M",1e6],["K",1e3]];
+  for(const [u,v] of units) if(n>=v) return (n/v).toFixed(n/v>=100?0:n/v>=10?1:2)+u;
+  return Math.floor(n).toLocaleString();
+}
+function allRarities(){ return [...W1,...W2,...W3]; }
+function rarity(name){ return allRarities().find(r=>r.name===name) || W1[0]; }
+
+function save(){
+  localStorage.setItem("needohSquishWorldSave", JSON.stringify(state));
+  toast("💾 Game saved!");
+}
+function load(){
+  try{
+    const raw=localStorage.getItem("needohSquishWorldSave");
+    if(raw) state={...state,...JSON.parse(raw)};
+  }catch(e){}
+  if(!state.stock || !state.stock.length || !state.restockAt) restock(true);
+}
+function resetGame(){
+  if(confirm("Reset all progress?")){
+    localStorage.removeItem("needohSquishWorldSave");
+    location.reload();
+  }
+}
+function toast(msg){
+  $("toast").textContent=msg;
+  $("toast").classList.add("show");
+  setTimeout(()=>$("toast").classList.remove("show"),1100);
+}
+
+function playSquishSound(r){
+  if(!state.sound) return;
+  audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+  const t=audioCtx.currentTime;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  const filter=audioCtx.createBiquadFilter();
+  osc.type = r.name==="Secret"||r.name==="Impossible"||r.name==="Deathly"||r.name==="Final Boss" ? "sawtooth" : r.name==="Epic"||r.name==="Mythic"||r.name==="Godly" ? "triangle" : "sine";
+  osc.frequency.setValueAtTime(r.sound*(.92+Math.random()*.16),t);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(45,r.sound*.58),t+.09);
+  filter.type="lowpass"; filter.frequency.value=1100+Math.random()*500;
+  gain.gain.setValueAtTime(.0001,t);
+  gain.gain.exponentialRampToValueAtTime(.12,t+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,t+.13);
+  osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t); osc.stop(t+.14);
+
+  if(["Epic","Mythic","Legendary","Secret","Insane","Impossible","Godly","Deathly","Heavenly","Final Boss"].includes(r.name)){
+    const o2=audioCtx.createOscillator(), g2=audioCtx.createGain();
+    o2.type="sine"; o2.frequency.value=r.sound*1.5;
+    g2.gain.setValueAtTime(.0001,t);
+    g2.gain.exponentialRampToValueAtTime(.045,t+.01);
+    g2.gain.exponentialRampToValueAtTime(.0001,t+.10);
+    o2.connect(g2);g2.connect(audioCtx.destination);o2.start(t+.02);o2.stop(t+.12);
+  }
+}
+
+function squish(ev){
+  const r=rarity(state.selected);
+  const earned=state.clickPower * state.baseMult * r.mult;
+  state.coins += earned;
+  state.squishes++;
+  const n=$("needoh"); n.classList.remove("squishing"); void n.offsetWidth; n.classList.add("squishing");
+  const f=document.createElement("div");
+  f.className="floating"; f.textContent="+"+fmt(earned)+" 🪙";
+  const rect=$("stage").getBoundingClientRect();
+  let x=rect.width/2 + (Math.random()*100-50), y=rect.height/2 - 70;
+  if(ev && ev.clientX){x=ev.clientX-rect.left;y=ev.clientY-rect.top}
+  f.style.left=x+"px";f.style.top=y+"px";
+  $("stage").appendChild(f); setTimeout(()=>f.remove(),900);
+  playSquishSound(r);
+  render();
+}
+
+function startHold(e){
+  e.preventDefault(); squish(e);
+  clearInterval(holdTimer);
+  holdTimer=setInterval(()=>squish(e),105);
+}
+function stopHold(){ clearInterval(holdTimer); holdTimer=null; }
+
+function upgradeCost(type){
+  if(type==="click") return Math.floor(35*Math.pow(1.72,state.clickLevel));
+  return Math.floor(180*Math.pow(2.05,state.multLevel));
+}
+function buyUpgrade(type){
+  const cost=upgradeCost(type);
+  if(state.coins<cost) return toast("Not enough coins!");
+  state.coins-=cost;
+  if(type==="click"){state.clickLevel++;state.clickPower++;}
+  else {state.multLevel++;state.baseMult*=1.25;}
+  render();save();
+}
+
+function weightedPick(list){
+  let total=list.reduce((a,r)=>a+r.chance,0), x=Math.random()*total;
+  for(const r of list){ if((x-=r.chance)<=0) return r; }
+  return list[0];
+}
+function genPrice(r){
+  return Math.floor(r.min + Math.random()*(r.max-r.min));
+}
+function restock(initial=false){
+  if(state.world===1){
+    for(const k of Object.keys(state.pity)) state.pity[k]--;
+    const guaranteed=[];
+    if(state.pity.Mythic<=0) guaranteed.push("Mythic");
+    if(state.pity.Legendary<=0) guaranteed.push("Legendary");
+    if(state.pity.Secret<=0) guaranteed.push("Secret");
+
+    let picks=[];
+    for(const name of guaranteed){
+      const r=rarity(name);picks.push(r);
+    }
+    while(picks.length<5) picks.push(weightedPick(W1));
+
+    // reset pity if rarity appears
+    for(const k of Object.keys(state.pity)){
+      if(picks.some(r=>r.name===k)) state.pity[k]={Mythic:8,Legendary:12,Secret:20}[k];
+    }
+    state.stock=picks.map((r,i)=>({id:Date.now()+"-"+i,name:r.name,price:genPrice(r)}));
+  }else if(state.world===2){
+    let picks=[];
+    while(picks.length<5) picks.push(weightedPick(W2));
+    state.stock=picks.map((r,i)=>({id:Date.now()+"-"+i,name:r.name,price:genPrice(r)}));
+  }else{
+    let picks=[];
+    while(picks.length<5) picks.push(weightedPick(W3));
+    state.stock=picks.map((r,i)=>({id:Date.now()+"-"+i,name:r.name,price:genPrice(r)}));
+  }
+  state.restockAt=Date.now()+60000;
+  if(!initial) toast("🛒 Market restocked!");
+  render();localStorage.setItem("needohSquishWorldSave",JSON.stringify(state));
+}
+function buyItem(index){
+  const item=state.stock[index], r=rarity(item.name);
+  if(state.coins<item.price) return toast("Not enough coins!");
+  state.coins-=item.price;
+  if(!state.owned.includes(item.name)) state.owned.push(item.name);
+  state.selected=item.name;
+  state.stock.splice(index,1);
+  toast(`${r.icon} ${r.name} unlocked!`);
+  render();save();
+}
+function switchWorld(){
+  if(state.world===1){
+    if(!state.world2Unlocked){
+      if(state.coins<1000000) return toast("Reach 1,000,000 coins first!");
+      state.world2Unlocked=true;
+      toast("🌊 World 2 unlocked!");
+    }
+    state.world=2;
+  } else if(state.world===2){
+    if(!state.world3Unlocked){
+      if(state.coins<10000000000) return toast("Reach 10,000,000,000 coins for World 3!");
+      state.world3Unlocked=true;
+      toast("🌌 WORLD 3 UNLOCKED!");
+    }
+    state.world=3;
+  } else {
+    state.world=1;
+  }
+  restock(true);render();save();
+}
+
+function renderCollection(){
+  $("collection").innerHTML="";
+  for(const name of state.owned){
+    const r=rarity(name);
+    const b=document.createElement("button");
+    b.className="chip"+(state.selected===name?" active":"");
+    b.textContent=`${r.icon} ${name} ×${r.mult}`;
+    b.onclick=()=>{state.selected=name;render();save()};
+    $("collection").appendChild(b);
+  }
+}
+function renderMarket(){
+  $("market").innerHTML="";
+  state.stock.forEach((item,i)=>{
+    const r=rarity(item.name);
+    const row=document.createElement("div");row.className="item";
+    row.innerHTML=`
+      <div class="mini" style="--c:${r.color};--g:${r.glow};--shape:${r.shape}"></div>
+      <div><h4>${r.icon} ${r.name}</h4><p>Multiplier ×${fmt(r.mult)} · ${state.owned.includes(r.name)?"Owned":"New"}</p></div>
+      <button class="buy" ${state.coins<item.price?"disabled":""}>🪙 ${fmt(item.price)}</button>`;
+    row.querySelector(".buy").onclick=()=>buyItem(i);
+    $("market").appendChild(row);
+  });
+}
+function render(){
+  const r=rarity(state.selected);
+  $("coins").textContent=fmt(state.coins);
+  $("squishes").textContent=fmt(state.squishes);
+  $("perSquish").textContent=fmt(state.clickPower*state.baseMult*r.mult);
+  $("rarityLabel").textContent=`${r.icon} ${r.name}`;
+  $("rarityLabel").style.color=r.color;
+  $("rarityMult").textContent=`Squishy multiplier ×${fmt(r.mult)} · Base ×${state.baseMult.toFixed(2)}`;
+  $("needoh").style.background=r.color;
+  $("needoh").style.setProperty("--glow",r.glow);
+  $("needoh").style.borderRadius=r.shape;
+  $("clickPrice").textContent=`🪙 ${fmt(upgradeCost("click"))} · Level ${state.clickLevel}`;
+  $("multPrice").textContent=`🪙 ${fmt(upgradeCost("mult"))} · Level ${state.multLevel}`;
+  $("soundBtn").textContent=state.sound?"🔊 Sound ON":"🔇 Sound OFF";
+  $("worldBadge").textContent=state.world===1?"🌎 World 1":state.world===2?"🌊 World 2":"🌌 World 3";
+  $("worldBtn").textContent=
+    state.world===1
+      ? (state.world2Unlocked?"🌊 Enter World 2":"🔒 World 2 — 1,000,000 🪙")
+      : state.world===2
+        ? (state.world3Unlocked?"🌌 Enter World 3":"🔒 World 3 — 10,000,000,000 🪙")
+        : "🌎 Return to World 1";
+  $("pityWrap").style.display=state.world===1?"grid":"none";
+  $("world2Info").style.display=state.world===1?"block":"none";
+  $("world3Info").style.display=state.world===2?"block":"none";
+  $("pityMythic").textContent=state.pity.Mythic;
+  $("pityLegendary").textContent=state.pity.Legendary;
+  $("pitySecret").textContent=state.pity.Secret;
+  if(state.world===1){
+    const p=Math.min(100,state.coins/1000000*100);
+    $("worldProgress").style.width=(state.world2Unlocked?100:p)+"%";
+    $("progressText").textContent=state.world2Unlocked
+      ? "World 2 unlocked!"
+      : `${fmt(state.coins)} / 1,000,000 coins to World 2`;
+  } else if(state.world===2){
+    const p=Math.min(100,state.coins/10000000000*100);
+    $("worldProgress").style.width=(state.world3Unlocked?100:p)+"%";
+    $("progressText").textContent=state.world3Unlocked
+      ? "World 3 unlocked!"
+      : `${fmt(state.coins)} / 10,000,000,000 coins to World 3`;
+  } else {
+    $("worldProgress").style.width="100%";
+    $("progressText").textContent="👹 FINAL BOSS WORLD — Hunt the rarest squishy!";
+  }
+  renderCollection(); renderMarket();
+}
+function tick(){
+  const left=Math.max(0,state.restockAt-Date.now());
+  const s=Math.ceil(left/1000);
+  $("timer").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  if(left<=0) restock();
+}
+$("needoh").addEventListener("pointerdown",startHold);
+window.addEventListener("pointerup",stopHold);
+window.addEventListener("pointercancel",stopHold);
+$("clickUpgrade").onclick=()=>buyUpgrade("click");
+$("multUpgrade").onclick=()=>buyUpgrade("mult");
+$("soundBtn").onclick=()=>{state.sound=!state.sound;render();save()};
+$("saveBtn").onclick=save;
+$("resetBtn").onclick=resetGame;
+$("worldBtn").onclick=switchWorld;
+
+load();
+render();
+setInterval(tick,250);
+setInterval(()=>localStorage.setItem("needohSquishWorldSave",JSON.stringify(state)),5000);
+</script>
+</body>
+</html>
