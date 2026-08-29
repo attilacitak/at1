@@ -44,6 +44,13 @@ game.addEventListener('load',()=>{
               rush.src='/coin-rush.js?v=2';
               rush.async=false;
               rush.onerror=()=>console.error('Could not load custom coin rush integration');
+              rush.onload=()=>{
+                const boss=d.createElement('script');
+                boss.src='/boss-cinematic.js?v=1';
+                boss.async=false;
+                boss.onerror=()=>console.error('Could not load cinematic boss battle integration');
+                d.body.appendChild(boss);
+              };
               d.body.appendChild(rush);
             };
             d.body.appendChild(wheel);
