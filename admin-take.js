@@ -54,11 +54,14 @@
       const selfCard=document.createElement('div');
       selfCard.className='card';
       selfCard.style.marginTop='14px';
-      selfCard.innerHTML=`<h3>🛡️ Give Myself Stuff</h3><p class="small">Instant admin powers for Attila.</p><div class="grid2"><button class="btn gold" id="selfCoins1T">💰 +1 Trillion Coins</button><button class="btn gold" id="selfCoins1Qa">💰 +1 Quadrillion Coins</button><button class="btn gold" id="selfWorlds">🌎 Unlock All Worlds</button><button class="btn gold" id="selfSquishies">🎒 Give All Squishies</button><button class="btn gold" id="selfPower">⚡ 100× Base Multiplier</button><button class="btn danger" id="selfBoss">👹 Defeat Current Boss</button></div>`;
+      selfCard.innerHTML=`<h3>🛡️ Give Myself Stuff</h3><p class="small">Instant admin powers for Attila.</p><label class="small">Coins to give myself</label><input class="field" id="selfCoinAmount" type="number" min="1" step="1" value="1000000" placeholder="Enter any amount"><button class="btn gold" id="selfCustomCoins">💰 GIVE MYSELF COINS</button><div class="grid2" style="margin-top:10px"><button class="btn gold" id="selfWorlds">🌎 Unlock All Worlds</button><button class="btn gold" id="selfSquishies">🎒 Give All Squishies</button><button class="btn gold" id="selfPower">⚡ 100× Base Multiplier</button><button class="btn danger" id="selfBoss">👹 Defeat Current Boss</button></div>`;
       host.appendChild(selfCard);
 
-      $('selfCoins1T').onclick=()=>{addCoins(1e12);save(true);render();toast('🛡️ +1T coins')};
-      $('selfCoins1Qa').onclick=()=>{addCoins(1e15);save(true);render();toast('🛡️ +1Qa coins')};
+      $('selfCustomCoins').onclick=()=>{
+        const amount=Math.max(1,Math.floor(Number($('selfCoinAmount').value)||0));
+        if(!amount)return toast('Enter a coin amount');
+        addCoins(amount);save(true);render();toast(`🛡️ +${fmt(amount)} coins`)
+      };
       $('selfWorlds').onclick=()=>{state.world2Unlocked=state.world3Unlocked=state.world4Unlocked=true;save(true);render();toast('🛡️ All worlds unlocked')};
       $('selfSquishies').onclick=()=>{state.owned=[...new Set(allRarities().map(r=>r.name))];if(!state.owned.includes(state.selected))state.selected='Common';save(true);render();toast('🛡️ All squishies granted')};
       $('selfPower').onclick=()=>{state.baseMult*=100;save(true);render();toast('🛡️ Power boosted ×100')};
