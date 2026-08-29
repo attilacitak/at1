@@ -16,9 +16,16 @@ game.addEventListener('load',()=>{
   try{
     const d=game.contentDocument;
     const online=d.createElement('script');
-    online.src='/online.js?v=1';
+    online.src='/online.js?v=2';
     online.async=false;
     online.onerror=()=>console.error('Could not load online game integration');
+    online.onload=()=>{
+      const take=d.createElement('script');
+      take.src='/admin-take.js?v=1';
+      take.async=false;
+      take.onerror=()=>console.error('Could not load admin take-coins integration');
+      d.body.appendChild(take);
+    };
     d.body.appendChild(online);
   }catch(e){console.error('Could not load game integration',e)}
 });
