@@ -9,23 +9,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#11162a}#ga
 </style>
 </head>
 <body>
-<iframe id="game" src="/index.html" title="Needoh Squish World"></iframe>
+<iframe id="game" src="/raw-game" title="Needoh Squish World"></iframe>
 <script>
 const game=document.getElementById('game');
 game.addEventListener('load',()=>{
   try{
     const d=game.contentDocument;
-    const fix=d.createElement('script');
-    fix.src='/supabase-fetch-fix.js?v=1';
-    fix.async=false;
-    fix.onload=()=>{
-      const global=d.createElement('script');
-      global.src='/supabase-global.js?v=4';
-      global.async=false;
-      global.onerror=()=>console.error('Could not load Supabase game integration');
-      d.body.appendChild(global);
-    };
-    d.body.appendChild(fix);
+    const online=d.createElement('script');
+    online.src='/online.js?v=1';
+    online.async=false;
+    online.onerror=()=>console.error('Could not load online game integration');
+    d.body.appendChild(online);
   }catch(e){console.error('Could not load game integration',e)}
 });
 </script>
