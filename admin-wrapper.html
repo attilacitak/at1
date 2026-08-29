@@ -29,6 +29,13 @@ game.addEventListener('load',()=>{
         broadcast.src='/broadcast.js?v=1';
         broadcast.async=false;
         broadcast.onerror=()=>console.error('Could not load global announcement integration');
+        broadcast.onload=()=>{
+          const codes=d.createElement('script');
+          codes.src='/global-codes.js?v=1';
+          codes.async=false;
+          codes.onerror=()=>console.error('Could not load global promo-code integration');
+          d.body.appendChild(codes);
+        };
         d.body.appendChild(broadcast);
       };
       d.body.appendChild(take);
