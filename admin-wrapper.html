@@ -15,11 +15,17 @@ const game=document.getElementById('game');
 game.addEventListener('load',()=>{
   try{
     const d=game.contentDocument;
-    const global=d.createElement('script');
-    global.src='/supabase-global.js?v=3';
-    global.async=false;
-    global.onerror=()=>console.error('Could not load Supabase game integration');
-    d.body.appendChild(global);
+    const fix=d.createElement('script');
+    fix.src='/supabase-fetch-fix.js?v=1';
+    fix.async=false;
+    fix.onload=()=>{
+      const global=d.createElement('script');
+      global.src='/supabase-global.js?v=4';
+      global.async=false;
+      global.onerror=()=>console.error('Could not load Supabase game integration');
+      d.body.appendChild(global);
+    };
+    d.body.appendChild(fix);
   }catch(e){console.error('Could not load game integration',e)}
 });
 </script>
