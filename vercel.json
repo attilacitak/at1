@@ -1,8 +1,9 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/admin-wrapper.html"
-    }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    { "src": "/raw-game", "dest": "/index.html" },
+    { "src": "/index\\.html", "dest": "/admin-wrapper.html" },
+    { "src": "/", "dest": "/admin-wrapper.html" },
+    { "handle": "filesystem" }
   ]
 }
