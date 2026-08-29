@@ -15,11 +15,17 @@ const game=document.getElementById('game');
 game.addEventListener('load',()=>{
   try{
     const d=game.contentDocument;
-    const s=d.createElement('script');
-    s.src='/gift-admin.js?v=1';
-    s.async=false;
-    d.body.appendChild(s);
-  }catch(e){console.error('Could not load admin gifts',e)}
+    const gift=d.createElement('script');
+    gift.src='/gift-admin.js?v=2';
+    gift.async=false;
+    gift.onload=()=>{
+      const global=d.createElement('script');
+      global.src='/supabase-global.js?v=1';
+      global.async=false;
+      d.body.appendChild(global);
+    };
+    d.body.appendChild(gift);
+  }catch(e){console.error('Could not load game integrations',e)}
 });
 </script>
 </body>
