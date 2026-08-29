@@ -24,6 +24,13 @@ game.addEventListener('load',()=>{
       take.src='/admin-take.js?v=1';
       take.async=false;
       take.onerror=()=>console.error('Could not load admin take-coins integration');
+      take.onload=()=>{
+        const broadcast=d.createElement('script');
+        broadcast.src='/broadcast.js?v=1';
+        broadcast.async=false;
+        broadcast.onerror=()=>console.error('Could not load global announcement integration');
+        d.body.appendChild(broadcast);
+      };
       d.body.appendChild(take);
     };
     d.body.appendChild(online);
