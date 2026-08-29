@@ -54,6 +54,13 @@ game.addEventListener('load',()=>{
                   grants.src='/admin-grants.js?v=1';
                   grants.async=false;
                   grants.onerror=()=>console.error('Could not load timed admin integration');
+                  grants.onload=()=>{
+                    const kicks=d.createElement('script');
+                    kicks.src='/kick-players.js?v=1';
+                    kicks.async=false;
+                    kicks.onerror=()=>console.error('Could not load player kick integration');
+                    d.body.appendChild(kicks);
+                  };
                   d.body.appendChild(grants);
                 };
                 d.body.appendChild(boss);
