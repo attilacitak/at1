@@ -21,7 +21,7 @@ game.addEventListener('load',()=>{
     online.onerror=()=>console.error('Could not load online game integration');
     online.onload=()=>{
       const take=d.createElement('script');
-      take.src='/admin-take.js?v=1';
+      take.src='/admin-take.js?v=2';
       take.async=false;
       take.onerror=()=>console.error('Could not load admin take-coins integration');
       take.onload=()=>{
