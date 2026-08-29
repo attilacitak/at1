@@ -3,7 +3,7 @@
   const SB_KEY='sb_publishable_PjR-iiuLbcoFqzjF8W-7Rg_S4X5cWwa';
   const headers={apikey:SB_KEY,'Content-Type':'application/json'};
   const keyFor=(name=playerName())=>cleanPlayerName(name).toLowerCase();
-  let processing=false;
+  let processing=false,resetChecking=false;
 
   async function api(path,opts={}){
     const r=await fetch(`${SB_URL}/rest/v1/${path}`,{...opts,headers:{...headers,...(opts.headers||{})}});
@@ -11,6 +11,37 @@
     if(r.status===204)return null;
     const t=await r.text();
     return t?JSON.parse(t):null;
+  }
+
+  function resetSeenKey(){return `needohLastAdminReset:${keyFor()}`}
+
+  function applyFullReset(resetId){
+    try{stopHold()}catch(e){}
+    try{localStorage.removeItem(SAVE_KEY)}catch(e){}
+    try{localStorage.removeItem('needohRedeemedGiftCodes')}catch(e){}
+    try{localStorage.setItem(resetSeenKey(),resetId)}catch(e){}
+    state=defaultState();
+    restock(true);
+    save(true);
+    render();
+    toast('🧨 Attila reset all your game progress');
+  }
+
+  async function checkResets(){
+    if(resetChecking||playerName()==='Player')return;
+    resetChecking=true;
+    try{
+      const key=encodeURIComponent(keyFor());
+      const rows=await api(`needoh_resets?select=id,created_at&target_key=eq.${key}&order=created_at.desc&limit=1`);
+      const latest=(rows||[])[0];
+      if(!latest)return;
+      const seen=localStorage.getItem(resetSeenKey())||'';
+      if(seen!==latest.id)applyFullReset(latest.id);
+    }catch(e){
+      console.warn('Admin reset check failed',e);
+    }finally{
+      resetChecking=false;
+    }
   }
 
   async function checkDeductions(){
@@ -70,8 +101,9 @@
       const card=document.createElement('div');
       card.className='card danger-box';
       card.style.marginTop='14px';
-      card.innerHTML=`<h3>💸 Take Player Coins</h3><p class="small">Choose a player and remove coins from their balance. Their balance will never go below 0.</p><label class="small">Player</label><select class="field" id="takePlayer">${options||'<option value="">No other online players yet</option>'}</select><label class="small">Amount to take</label><input class="field" id="takeAmount" type="number" min="1" value="1000"><button class="btn danger" id="takeCoinsBtn">💸 TAKE COINS</button>`;
+      card.innerHTML=`<h3>💸 Take Player Coins</h3><p class="small">Choose a player and remove coins from their balance. Their balance will never go below 0.</p><label class="small">Player</label><select class="field" id="takePlayer">${options||'<option value="">No other online players yet</option>'}</select><label class="small">Amount to take</label><input class="field" id="takeAmount" type="number" min="1" value="1000"><button class="btn danger" id="takeCoinsBtn">💸 TAKE COINS</button><hr style="margin:18px 0;border:0;border-top:1px solid rgba(255,255,255,.18)"><h3>🧨 Take Everything</h3><p class="small">Deletes all game progress for the selected player: coins, squishes, click power, multipliers, worlds, squishies, bosses, quests, achievements, boxes and normal redeemed-code progress. Their player name stays.</p><button class="btn danger" id="takeEverythingBtn">🧨 TAKE EVERYTHING</button>`;
       host.appendChild(card);
+
       $('takeCoinsBtn').onclick=async()=>{
         const target=$('takePlayer').value;
         const amount=Math.max(1,Math.floor(Number($('takeAmount').value)||0));
@@ -94,12 +126,43 @@
           toast('Could not take coins');
         }
       };
+
+      $('takeEverythingBtn').onclick=async()=>{
+        const target=$('takePlayer').value;
+        if(!target)return toast('No player selected');
+        const p=others.find(x=>x.player_key===target);
+        const name=p?.display_name||target;
+        if(!confirm(`Reset ALL game progress for ${name}? This cannot be undone.`))return;
+        try{
+          await api('needoh_resets',{
+            method:'POST',
+            headers:{Prefer:'return=minimal'},
+            body:JSON.stringify([{
+              target_key:target,
+              target_name:name,
+              admin_name:'Attila'
+            }])
+          });
+          try{
+            await api(`needoh_players?player_key=eq.${encodeURIComponent(target)}`,{
+              method:'PATCH',
+              headers:{Prefer:'return=minimal'},
+              body:JSON.stringify({coins:0,squishes:0,world:1,updated_at:new Date().toISOString()})
+            });
+          }catch(e){}
+          toast(`🧨 ${name}'s progress will be reset`);
+        }catch(e){
+          toast('Could not reset player progress');
+        }
+      };
     }catch(e){
       console.warn('Could not load extended admin controls',e);
     }
   };
 
   $('adminBtn').onclick=showAdmin;
+  checkResets();
   checkDeductions();
+  setInterval(checkResets,3000);
   setInterval(checkDeductions,5000);
 })();
