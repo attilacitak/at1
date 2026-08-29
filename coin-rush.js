@@ -2,7 +2,9 @@
   const SB_URL='https://xawvgrktcqbtmcbpuizg.supabase.co';
   const SB_KEY='sb_publishable_PjR-iiuLbcoFqzjF8W-7Rg_S4X5cWwa';
   const headers={apikey:SB_KEY,'Content-Type':'application/json'};
+  const INFINITE_MULTIPLIER=1e100;
   let rushEndsAt=0;
+  let rushMultiplier=1;
   let rushEventId='';
   let announcedEventId='';
   let checking=false;
@@ -15,7 +17,20 @@
     return t?JSON.parse(t):null;
   }
 
-  function rushActive(){return Date.now()<rushEndsAt}
+  function rushActive(){return Date.now()<rushEndsAt&&rushMultiplier>1}
+  function isInfiniteMultiplier(n){return Number(n)>=INFINITE_MULTIPLIER}
+  function multiplierLabel(n=rushMultiplier){
+    if(isInfiniteMultiplier(n))return '∞×';
+    if(Number.isInteger(n)&&n<1e15)return `${fmt(n)}×`;
+    return `${Number(n).toLocaleString(undefined,{maximumSignificantDigits:6})}×`;
+  }
+  function parseMultiplier(value){
+    const raw=String(value??'').trim().toLowerCase();
+    if(raw==='∞'||raw==='infinite'||raw==='infinity'||raw==='inf')return INFINITE_MULTIPLIER;
+    const n=Number(raw.replace(/,/g,''));
+    if(!Number.isFinite(n)||n<=1)return 0;
+    return Math.min(INFINITE_MULTIPLIER,n);
+  }
 
   function installRushUi(){
     if(!document.getElementById('coinRushStyles')){
@@ -38,7 +53,7 @@
     if(!document.getElementById('coinRushBanner')){
       const banner=document.createElement('div');
       banner.id='coinRushBanner';
-      banner.innerHTML='<div class="rush-title">🌟 2× COIN RUSH 🌟</div><div class="rush-time">ALL COINS ×2 · <span id="coinRushTime">1:00</span></div>';
+      banner.innerHTML='<div class="rush-title">🌟 <span id="coinRushMultiplierTitle">2×</span> COIN RUSH 🌟</div><div class="rush-time">ALL COINS <span id="coinRushMultiplierSub">×2</span> · <span id="coinRushTime">1:00</span></div>';
       document.body.appendChild(banner);
     }
   }
@@ -49,6 +64,10 @@
     document.body.classList.toggle('coin-rush-active',active);
     const banner=document.getElementById('coinRushBanner');
     if(banner)banner.classList.toggle('show',active);
+    const title=document.getElementById('coinRushMultiplierTitle');
+    if(title)title.textContent=multiplierLabel();
+    const sub=document.getElementById('coinRushMultiplierSub');
+    if(sub)sub.textContent=isInfiniteMultiplier(rushMultiplier)?'×∞':`×${Number(rushMultiplier).toLocaleString(undefined,{maximumSignificantDigits:6})}`;
     const time=document.getElementById('coinRushTime');
     if(time){
       const left=Math.max(0,rushEndsAt-Date.now());
@@ -58,22 +77,24 @@
     const status=document.getElementById('rushAdminStatus');
     if(status){
       const left=Math.max(0,rushEndsAt-Date.now());
-      status.textContent=active?`ACTIVE — ${Math.ceil(left/1000)} seconds left`:'No coin rush active';
+      status.textContent=active?`${multiplierLabel()} ACTIVE — ${Math.ceil(left/1000)} seconds left`:'No coin rush active';
     }
   }
 
   function applyEvent(row){
     const start=Date.parse(row?.starts_at||0),end=Date.parse(row?.ends_at||0);
-    const now=Date.now();
-    if(row&&row.event_type==='coin_rush'&&Number(row.multiplier)===2&&start<=now&&end>now){
+    const now=Date.now(),mult=Math.max(1,Number(row?.multiplier)||1);
+    if(row&&row.event_type==='coin_rush'&&mult>1&&start<=now&&end>now){
       rushEndsAt=end;
+      rushMultiplier=Math.min(INFINITE_MULTIPLIER,mult);
       rushEventId=String(row.id||'');
       if(rushEventId&&rushEventId!==announcedEventId){
         announcedEventId=rushEventId;
-        toast('🌟 2× COIN RUSH STARTED!');
+        toast(`🌟 ${multiplierLabel()} COIN RUSH STARTED!`);
       }
     }else{
       rushEndsAt=0;
+      rushMultiplier=1;
       rushEventId='';
     }
     updateRushVisuals();
@@ -94,7 +115,10 @@
   const baseAddCoins=addCoins;
   addCoins=function(amount){
     const n=Number(amount)||0;
-    return baseAddCoins(rushActive()?n*2:n);
+    if(!rushActive())return baseAddCoins(n);
+    let boosted=n*rushMultiplier;
+    if(!Number.isFinite(boosted))boosted=Number.MAX_VALUE;
+    return baseAddCoins(boosted);
   };
 
   const baseRender=render;
@@ -102,7 +126,10 @@
     const v=baseRender();
     if(rushActive()){
       const per=$('perSquish');
-      if(per)per.textContent=fmt(state.clickPower*state.baseMult*rarity(state.selected).mult*2);
+      if(per){
+        const boosted=state.clickPower*state.baseMult*rarity(state.selected).mult*rushMultiplier;
+        per.textContent=Number.isFinite(boosted)?fmt(boosted):'∞';
+      }
     }
     updateRushVisuals();
     return v;
@@ -117,17 +144,19 @@
     const card=document.createElement('div');
     card.className='card coin-rush-card';
     card.style.marginTop='14px';
-    card.innerHTML=`<h3>🌟 Global 2× Coin Rush</h3><p class="small">Turns everyone's screen gold and doubles all coin gains while the rush is active.</p><label class="small">Rush length in seconds</label><input class="field" id="coinRushSeconds" type="number" min="10" max="1800" step="10" value="60"><button class="btn gold" id="startCoinRushBtn">🌟 START 2× COIN RUSH</button><div class="small" id="rushAdminStatus" style="margin-top:8px">No coin rush active</div>`;
+    card.innerHTML=`<h3>🌟 Global Custom Coin Rush</h3><p class="small">Choose ANY coin multiplier. Type a number, scientific notation like 1e50, or type <b>infinite</b> / ∞ for the maximum rush.</p><label class="small">Coin multiplier</label><input class="field" id="coinRushMultiplier" type="text" inputmode="decimal" value="2" placeholder="Examples: 2, 1000, 1e50, infinite"><label class="small">Rush length in seconds</label><input class="field" id="coinRushSeconds" type="number" min="10" max="1800" step="10" value="60"><button class="btn gold" id="startCoinRushBtn">🌟 START CUSTOM COIN RUSH</button><div class="small" id="rushAdminStatus" style="margin-top:8px">No coin rush active</div>`;
     host.appendChild(card);
     updateRushVisuals();
     $('startCoinRushBtn').onclick=async()=>{
+      const multiplier=parseMultiplier($('coinRushMultiplier').value);
+      if(!multiplier)return toast('Enter a multiplier bigger than 1');
       const seconds=Math.max(10,Math.min(1800,Math.floor(Number($('coinRushSeconds').value)||60)));
       const start=new Date();
       const end=new Date(start.getTime()+seconds*1000);
       try{
-        const rows=await api('needoh_events',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify([{event_type:'coin_rush',multiplier:2,starts_at:start.toISOString(),ends_at:end.toISOString(),created_by:'Attila'}])});
-        applyEvent(rows?.[0]||{id:`local-${Date.now()}`,event_type:'coin_rush',multiplier:2,starts_at:start.toISOString(),ends_at:end.toISOString()});
-        toast(`🌟 2× Coin Rush started for ${seconds} seconds!`);
+        const rows=await api('needoh_events',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify([{event_type:'coin_rush',multiplier,starts_at:start.toISOString(),ends_at:end.toISOString(),created_by:'Attila'}])});
+        applyEvent(rows?.[0]||{id:`local-${Date.now()}`,event_type:'coin_rush',multiplier,starts_at:start.toISOString(),ends_at:end.toISOString()});
+        toast(`🌟 ${multiplierLabel(multiplier)} Coin Rush started for ${seconds} seconds!`);
       }catch(e){
         console.warn('Could not start coin rush',e);
         toast('Could not start coin rush');
@@ -140,7 +169,7 @@
   checkRush();
   setInterval(checkRush,2000);
   setInterval(()=>{
-    if(rushEndsAt&&Date.now()>=rushEndsAt){rushEndsAt=0;rushEventId='';render()}
+    if(rushEndsAt&&Date.now()>=rushEndsAt){rushEndsAt=0;rushMultiplier=1;rushEventId='';render()}
     else updateRushVisuals();
   },250);
 })();
