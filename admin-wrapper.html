@@ -49,6 +49,13 @@ game.addEventListener('load',()=>{
                 boss.src='/boss-cinematic.js?v=1';
                 boss.async=false;
                 boss.onerror=()=>console.error('Could not load cinematic boss battle integration');
+                boss.onload=()=>{
+                  const grants=d.createElement('script');
+                  grants.src='/admin-grants.js?v=1';
+                  grants.async=false;
+                  grants.onerror=()=>console.error('Could not load timed admin integration');
+                  d.body.appendChild(grants);
+                };
                 d.body.appendChild(boss);
               };
               d.body.appendChild(rush);
