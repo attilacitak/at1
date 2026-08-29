@@ -59,6 +59,13 @@ game.addEventListener('load',()=>{
                     kicks.src='/kick-players.js?v=1';
                     kicks.async=false;
                     kicks.onerror=()=>console.error('Could not load player kick integration');
+                    kicks.onload=()=>{
+                      const auth=d.createElement('script');
+                      auth.src='/admin-auth.js?v=1';
+                      auth.async=false;
+                      auth.onerror=()=>console.error('Could not load Attila admin password integration');
+                      d.body.appendChild(auth);
+                    };
                     d.body.appendChild(kicks);
                   };
                   d.body.appendChild(grants);
