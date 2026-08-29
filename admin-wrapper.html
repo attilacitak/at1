@@ -34,6 +34,13 @@ game.addEventListener('load',()=>{
           codes.src='/global-codes.js?v=1';
           codes.async=false;
           codes.onerror=()=>console.error('Could not load global promo-code integration');
+          codes.onload=()=>{
+            const wheel=d.createElement('script');
+            wheel.src='/mystery-wheel.js?v=1';
+            wheel.async=false;
+            wheel.onerror=()=>console.error('Could not load mystery prize-wheel integration');
+            d.body.appendChild(wheel);
+          };
           d.body.appendChild(codes);
         };
         d.body.appendChild(broadcast);
