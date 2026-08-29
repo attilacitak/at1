@@ -41,9 +41,9 @@ game.addEventListener('load',()=>{
             wheel.onerror=()=>console.error('Could not load mystery prize-wheel integration');
             wheel.onload=()=>{
               const rush=d.createElement('script');
-              rush.src='/coin-rush.js?v=1';
+              rush.src='/coin-rush.js?v=2';
               rush.async=false;
-              rush.onerror=()=>console.error('Could not load 2x coin rush integration');
+              rush.onerror=()=>console.error('Could not load custom coin rush integration');
               d.body.appendChild(rush);
             };
             d.body.appendChild(wheel);
