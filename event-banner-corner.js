@@ -1,45 +1,48 @@
 (() => {
   function applyCornerStyle(){
-    if(document.getElementById('eventBannerCornerFix'))return;
-    const s=document.createElement('style');
-    s.id='eventBannerCornerFix';
+    let s=document.getElementById('eventBannerCornerFix');
+    if(!s){
+      s=document.createElement('style');
+      s.id='eventBannerCornerFix';
+      document.head.appendChild(s);
+    }
     s.textContent=`
       #extraEventBanner{
-        top:14px!important;
-        right:14px!important;
+        position:fixed!important;
+        top:auto!important;
         left:auto!important;
-        bottom:auto!important;
-        transform:translateX(14px)!important;
-        max-width:min(320px,calc(100vw - 28px))!important;
-        padding:8px 11px!important;
+        right:14px!important;
+        bottom:14px!important;
+        transform:translateY(12px)!important;
+        max-width:min(285px,calc(100vw - 28px))!important;
+        padding:7px 10px!important;
         border-radius:12px!important;
         text-align:left!important;
-        font-size:12px!important;
-        line-height:1.25!important;
-        box-shadow:0 8px 28px rgba(0,0,0,.38)!important;
+        font-size:11px!important;
+        line-height:1.2!important;
+        box-shadow:0 7px 24px rgba(0,0,0,.34)!important;
         opacity:0!important;
         pointer-events:none!important;
+        z-index:95!important;
       }
       #extraEventBanner.show{
-        opacity:.96!important;
-        transform:translateX(0)!important;
+        opacity:.94!important;
+        transform:translateY(0)!important;
       }
       @media(max-width:620px){
         #extraEventBanner{
-          top:auto!important;
-          right:10px!important;
-          bottom:10px!important;
-          left:auto!important;
-          max-width:calc(100vw - 20px)!important;
-          font-size:11px!important;
-          padding:7px 10px!important;
+          right:8px!important;
+          bottom:8px!important;
+          max-width:min(250px,calc(100vw - 16px))!important;
+          font-size:10px!important;
+          padding:6px 9px!important;
         }
       }
     `;
-    document.head.appendChild(s);
   }
 
   applyCornerStyle();
   setTimeout(applyCornerStyle,200);
+  setTimeout(applyCornerStyle,1000);
   window.__needohEventBannerCornerLoaded=true;
 })();
