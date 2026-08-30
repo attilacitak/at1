@@ -48,13 +48,13 @@ game.addEventListener('load',()=>{
                         const world5=d.createElement('script');world5.src='/world5-limited.js?v=1';world5.async=false;
                         world5.onerror=()=>console.error('Could not load World 5 integration');
                         world5.onload=()=>{
-                          const events=d.createElement('script');events.src='/events-rewards.js?v=1';events.async=false;
+                          const events=d.createElement('script');events.src='/events-rewards.js?v=2';events.async=false;
                           events.onerror=()=>console.error('Could not load events and rewards integration');
                           events.onload=()=>{
-                            const social=d.createElement('script');social.src='/social-admin.js?v=1';social.async=false;
+                            const social=d.createElement('script');social.src='/social-admin.js?v=2';social.async=false;
                             social.onerror=()=>console.error('Could not load social and admin dashboard integration');
                             social.onload=()=>{
-                              const boxes=d.createElement('script');boxes.src='/enhanced-boxes.js?v=1';boxes.async=false;
+                              const boxes=d.createElement('script');boxes.src='/enhanced-boxes.js?v=2';boxes.async=false;
                               boxes.onerror=()=>console.error('Could not load enhanced mystery boxes integration');
                               boxes.onload=()=>{
                                 const enhancedBoss=d.createElement('script');enhancedBoss.src='/enhanced-boss.js?v=1';enhancedBoss.async=false;
@@ -63,8 +63,13 @@ game.addEventListener('load',()=>{
                                   const attila=d.createElement('script');attila.src='/attila-squishy.js?v=2';attila.async=false;
                                   attila.onerror=()=>console.error('Could not load ATTILA squishy permissions');
                                   attila.onload=()=>{
-                                    const faceFix=d.createElement('script');faceFix.src='/attila-face-fix.js?v=2';faceFix.async=false;
+                                    const faceFix=d.createElement('script');faceFix.src='/attila-face-fix.js?v=3';faceFix.async=false;
                                     faceFix.onerror=()=>console.error('Could not load ATTILA face render fix');
+                                    faceFix.onload=()=>{
+                                      const fixes=d.createElement('script');fixes.src='/final-fixes.js?v=1';fixes.async=false;
+                                      fixes.onerror=()=>console.error('Could not load final game fixes');
+                                      d.body.appendChild(fixes);
+                                    };
                                     d.body.appendChild(faceFix);
                                   };
                                   d.body.appendChild(attila);
