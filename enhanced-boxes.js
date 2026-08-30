@@ -11,7 +11,7 @@
   const boxMult=()=>Math.max(1,events().mult('box_frenzy'));
   const price=b=>Math.floor(b.price/(events().active('box_frenzy')?2:1));
   function rewardFor(b){
-    const jackpot=Math.min(.4,b.jackpot*luck()),limited=Math.min(.2,.01*luck()+(b===EBOX.admin?.02:0));
+    const jackpot=Math.min(.4,b.jackpot*luck()),limited=Math.min(.2,.01*luck()+(b===EBOX.admin ? .02 : 0));
     if(Math.random()<jackpot)return{type:'jackpot',icon:'💰',text:'JACKPOT',amount:Math.floor(b.coinMax*(10+Math.random()*40)*boxMult())};
     if(Math.random()<limited){const list=window.__needohLimitedRarities||[],r=list[Math.floor(Math.random()*list.length)];if(r)return{type:'squishy',icon:r.icon,text:r.name,rarity:r,limited:true}}
     if(Math.random()<Math.min(.95,b.squishyChance*luck())){const pool=availableBoxPool(),r=pool[Math.floor(Math.random()*pool.length)];return{type:'squishy',icon:r.icon,text:r.name,rarity:r}}
