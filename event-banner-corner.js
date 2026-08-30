@@ -41,8 +41,19 @@
     `;
   }
 
+  function loadMegaUpdate(){
+    if(window.__needohMegaUpdateLoaded||document.querySelector('script[data-needoh-mega]'))return;
+    const s=document.createElement('script');
+    s.src='/mega-update.js?v=1';
+    s.async=false;
+    s.dataset.needohMega='1';
+    s.onerror=()=>console.error('Could not load Needoh Mega Update');
+    document.body.appendChild(s);
+  }
+
   applyCornerStyle();
   setTimeout(applyCornerStyle,200);
   setTimeout(applyCornerStyle,1000);
+  loadMegaUpdate();
   window.__needohEventBannerCornerLoaded=true;
 })();
