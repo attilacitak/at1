@@ -6,7 +6,8 @@
     name:'ATTILA',icon:'👑',
     color:'linear-gradient(135deg,#080808 0%,#3b2b00 34%,#ffd84d 58%,#6b4c00 76%,#111 100%)',
     glow:'#ffd84d',shape:'42% 58% 45% 55% / 55% 40% 60% 45%',
-    mult:1e15,chance:0,min:0,max:0,sound:1080,limited:true,ownerOnly:true
+    mult:1e15,chance:0,min:0,max:0,sound:1080,limited:true,ownerOnly:true,
+    image:'/attila-squishy.webp'
   };
   const keyFor=(name=playerName())=>cleanPlayerName(name).toLowerCase();
   const ownerName=()=>keyFor()==='attila';
@@ -28,6 +29,26 @@
   };
   window.__needohAttilaRarity=ATTILA;
 
+  function renderAttilaArtwork(){
+    const n=$('needoh');
+    if(!n)return;
+    if(state.selected==='ATTILA'){
+      n.style.backgroundImage=`linear-gradient(rgba(255,210,60,.06),rgba(0,0,0,.08)),url(${ATTILA.image})`;
+      n.style.backgroundSize='cover';
+      n.style.backgroundPosition='center';
+      n.style.backgroundRepeat='no-repeat';
+      n.style.border='3px solid rgba(255,216,77,.92)';
+      n.style.boxShadow='inset -22px -24px 40px rgba(0,0,0,.12),inset 20px 20px 35px rgba(255,255,255,.12),0 0 70px #ffd84d,0 0 120px rgba(255,185,40,.35)';
+    }else{
+      n.style.backgroundImage='none';
+      n.style.backgroundSize='';
+      n.style.backgroundPosition='';
+      n.style.backgroundRepeat='';
+      n.style.border='';
+      n.style.boxShadow='';
+    }
+  }
+
   function ensureOwnerHasAttila(){
     if(!ownerAuthorized())return false;
     if(!state.owned.includes('ATTILA')){
@@ -41,7 +62,7 @@
   }
 
   async function allowedGiftForMe(){
-    if(ownerName())return true;
+    if(ownerAuthorized())return true;
     const key=encodeURIComponent(keyFor());
     const rows=await api(`needoh_grants?select=id&target_key=eq.${key}&reward_type=eq.squishy&item=eq.ATTILA&admin_name=eq.Attila&limit=1`);
     return !!rows?.length;
@@ -101,7 +122,7 @@
       const opts=others.map(p=>`<option value="${escapeHtml(p.player_key)}">${escapeHtml(p.display_name)}</option>`).join('');
       const card=document.createElement('div');
       card.id='attilaSquishyOwnerCard';card.className='card';card.style.marginTop='14px';
-      card.innerHTML=`<h3>👑 ATTILA Squishy — OWNER EXCLUSIVE</h3><div style="display:flex;align-items:center;gap:14px;margin:10px 0"><div style="width:78px;height:78px;border-radius:42% 58% 45% 55% / 55% 40% 60% 45%;background:linear-gradient(135deg,#080808,#3b2b00,#ffd84d,#111);box-shadow:0 0 28px #ffd84d"></div><div><b>👑 ATTILA</b><div class="small">×${fmt(ATTILA.mult)} multiplier · Only the real Attila owner can create this gift.</div></div></div><label class="small">Gift ATTILA Squishy to</label><select class="field" id="attilaGiftPlayer">${opts||'<option value="">No other players found</option>'}</select><button class="btn gold" id="giftAttilaSquishyBtn">👑 GIFT ATTILA SQUISHY</button><p class="small" style="margin-top:8px">It cannot drop from boxes/events and temporary admins cannot give it.</p>`;
+      card.innerHTML=`<h3>👑 ATTILA Squishy — OWNER EXCLUSIVE</h3><div style="display:flex;align-items:center;gap:14px;margin:10px 0"><div style="width:86px;height:86px;border-radius:42% 58% 45% 55% / 55% 40% 60% 45%;background-image:url('/attila-squishy.webp');background-size:cover;background-position:center;box-shadow:0 0 28px #ffd84d;border:2px solid #ffd84d"></div><div><b>👑 ATTILA</b><div class="small">×${fmt(ATTILA.mult)} multiplier · Only the real Attila owner can create this gift.</div></div></div><label class="small">Gift ATTILA Squishy to</label><select class="field" id="attilaGiftPlayer">${opts||'<option value="">No other players found</option>'}</select><button class="btn gold" id="giftAttilaSquishyBtn">👑 GIFT ATTILA SQUISHY</button><p class="small" style="margin-top:8px">It cannot drop from boxes/events and temporary admins cannot give it.</p>`;
       host.appendChild(card);
       $('giftAttilaSquishyBtn').onclick=async()=>{
         const target=$('attilaGiftPlayer').value;if(!target)return toast('Choose a player');
@@ -134,9 +155,17 @@
     }catch(e){openHub('💬 Global Chat','<div class="notice">Chat could not connect.</div>')}
   };
 
+  const previousRender=render;
+  render=function(){
+    const v=previousRender();
+    renderAttilaArtwork();
+    return v;
+  };
+
   $('adminBtn').onclick=showAdmin;
   $('messagesBtn').onclick=showMessages;
   enforceAttilaOwnership();
+  renderAttilaArtwork();
   setInterval(enforceAttilaOwnership,4000);
   window.__needohTemporaryAdminGiveOnly=temporaryAdmin;
   window.__needohAttilaSquishyLoaded=true;
