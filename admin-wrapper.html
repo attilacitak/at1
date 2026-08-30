@@ -74,6 +74,13 @@ game.addEventListener('load',()=>{
                           events.src='/events-rewards.js?v=1';
                           events.async=false;
                           events.onerror=()=>console.error('Could not load events and rewards integration');
+                          events.onload=()=>{
+                            const social=d.createElement('script');
+                            social.src='/social-admin.js?v=1';
+                            social.async=false;
+                            social.onerror=()=>console.error('Could not load social and admin dashboard integration');
+                            d.body.appendChild(social);
+                          };
                           d.body.appendChild(events);
                         };
                         d.body.appendChild(world5);
