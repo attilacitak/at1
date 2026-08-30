@@ -15,70 +15,49 @@ const game=document.getElementById('game');
 game.addEventListener('load',()=>{
   try{
     const d=game.contentDocument;
-    const online=d.createElement('script');
-    online.src='/online.js?v=2';
-    online.async=false;
+    const online=d.createElement('script');online.src='/online.js?v=2';online.async=false;
     online.onerror=()=>console.error('Could not load online game integration');
     online.onload=()=>{
-      const take=d.createElement('script');
-      take.src='/admin-take.js?v=2';
-      take.async=false;
+      const take=d.createElement('script');take.src='/admin-take.js?v=2';take.async=false;
       take.onerror=()=>console.error('Could not load admin take-coins integration');
       take.onload=()=>{
-        const broadcast=d.createElement('script');
-        broadcast.src='/broadcast.js?v=1';
-        broadcast.async=false;
+        const broadcast=d.createElement('script');broadcast.src='/broadcast.js?v=1';broadcast.async=false;
         broadcast.onerror=()=>console.error('Could not load global announcement integration');
         broadcast.onload=()=>{
-          const codes=d.createElement('script');
-          codes.src='/global-codes.js?v=1';
-          codes.async=false;
+          const codes=d.createElement('script');codes.src='/global-codes.js?v=1';codes.async=false;
           codes.onerror=()=>console.error('Could not load global promo-code integration');
           codes.onload=()=>{
-            const wheel=d.createElement('script');
-            wheel.src='/mystery-wheel.js?v=1';
-            wheel.async=false;
+            const wheel=d.createElement('script');wheel.src='/mystery-wheel.js?v=1';wheel.async=false;
             wheel.onerror=()=>console.error('Could not load mystery prize-wheel integration');
             wheel.onload=()=>{
-              const rush=d.createElement('script');
-              rush.src='/coin-rush.js?v=2';
-              rush.async=false;
+              const rush=d.createElement('script');rush.src='/coin-rush.js?v=2';rush.async=false;
               rush.onerror=()=>console.error('Could not load custom coin rush integration');
               rush.onload=()=>{
-                const boss=d.createElement('script');
-                boss.src='/boss-cinematic.js?v=1';
-                boss.async=false;
+                const boss=d.createElement('script');boss.src='/boss-cinematic.js?v=1';boss.async=false;
                 boss.onerror=()=>console.error('Could not load cinematic boss battle integration');
                 boss.onload=()=>{
-                  const grants=d.createElement('script');
-                  grants.src='/admin-grants.js?v=1';
-                  grants.async=false;
+                  const grants=d.createElement('script');grants.src='/admin-grants.js?v=1';grants.async=false;
                   grants.onerror=()=>console.error('Could not load timed admin integration');
                   grants.onload=()=>{
-                    const kicks=d.createElement('script');
-                    kicks.src='/kick-players.js?v=1';
-                    kicks.async=false;
+                    const kicks=d.createElement('script');kicks.src='/kick-players.js?v=1';kicks.async=false;
                     kicks.onerror=()=>console.error('Could not load player kick integration');
                     kicks.onload=()=>{
-                      const auth=d.createElement('script');
-                      auth.src='/admin-auth.js?v=1';
-                      auth.async=false;
+                      const auth=d.createElement('script');auth.src='/admin-auth.js?v=1';auth.async=false;
                       auth.onerror=()=>console.error('Could not load Attila admin password integration');
                       auth.onload=()=>{
-                        const world5=d.createElement('script');
-                        world5.src='/world5-limited.js?v=1';
-                        world5.async=false;
+                        const world5=d.createElement('script');world5.src='/world5-limited.js?v=1';world5.async=false;
                         world5.onerror=()=>console.error('Could not load World 5 integration');
                         world5.onload=()=>{
-                          const events=d.createElement('script');
-                          events.src='/events-rewards.js?v=1';
-                          events.async=false;
+                          const events=d.createElement('script');events.src='/events-rewards.js?v=1';events.async=false;
                           events.onerror=()=>console.error('Could not load events and rewards integration');
                           events.onload=()=>{
-                            const social=d.createElement('script');
-                            social.src='/social-admin.js?v=1';
-                            social.async=false;
+                            const social=d.createElement('script');social.src='/social-admin.js?v=1';social.async=false;
                             social.onerror=()=>console.error('Could not load social and admin dashboard integration');
+                            social.onload=()=>{
+                              const boxes=d.createElement('script');boxes.src='/enhanced-boxes.js?v=1';boxes.async=false;
+                              boxes.onerror=()=>console.error('Could not load enhanced mystery boxes integration');
+                              d.body.appendChild(boxes);
+                            };
                             d.body.appendChild(social);
                           };
                           d.body.appendChild(events);
