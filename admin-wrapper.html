@@ -68,6 +68,11 @@ game.addEventListener('load',()=>{
                                     faceFix.onload=()=>{
                                       const fixes=d.createElement('script');fixes.src='/final-fixes.js?v=1';fixes.async=false;
                                       fixes.onerror=()=>console.error('Could not load final game fixes');
+                                      fixes.onload=()=>{
+                                        const bannerCorner=d.createElement('script');bannerCorner.src='/event-banner-corner.js?v=1';bannerCorner.async=false;
+                                        bannerCorner.onerror=()=>console.error('Could not load event banner corner fix');
+                                        d.body.appendChild(bannerCorner);
+                                      };
                                       d.body.appendChild(fixes);
                                     };
                                     d.body.appendChild(faceFix);
