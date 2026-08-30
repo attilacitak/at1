@@ -56,6 +56,11 @@ game.addEventListener('load',()=>{
                             social.onload=()=>{
                               const boxes=d.createElement('script');boxes.src='/enhanced-boxes.js?v=1';boxes.async=false;
                               boxes.onerror=()=>console.error('Could not load enhanced mystery boxes integration');
+                              boxes.onload=()=>{
+                                const enhancedBoss=d.createElement('script');enhancedBoss.src='/enhanced-boss.js?v=1';enhancedBoss.async=false;
+                                enhancedBoss.onerror=()=>console.error('Could not load enhanced boss battle integration');
+                                d.body.appendChild(enhancedBoss);
+                              };
                               d.body.appendChild(boxes);
                             };
                             d.body.appendChild(social);
