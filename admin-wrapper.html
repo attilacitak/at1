@@ -60,8 +60,13 @@ game.addEventListener('load',()=>{
                                 const enhancedBoss=d.createElement('script');enhancedBoss.src='/enhanced-boss.js?v=1';enhancedBoss.async=false;
                                 enhancedBoss.onerror=()=>console.error('Could not load enhanced boss battle integration');
                                 enhancedBoss.onload=()=>{
-                                  const attila=d.createElement('script');attila.src='/attila-squishy.js?v=1';attila.async=false;
+                                  const attila=d.createElement('script');attila.src='/attila-squishy.js?v=2';attila.async=false;
                                   attila.onerror=()=>console.error('Could not load ATTILA squishy permissions');
+                                  attila.onload=()=>{
+                                    const faceFix=d.createElement('script');faceFix.src='/attila-face-fix.js?v=1';faceFix.async=false;
+                                    faceFix.onerror=()=>console.error('Could not load ATTILA face render fix');
+                                    d.body.appendChild(faceFix);
+                                  };
                                   d.body.appendChild(attila);
                                 };
                                 d.body.appendChild(enhancedBoss);
