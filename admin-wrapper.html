@@ -69,6 +69,13 @@ game.addEventListener('load',()=>{
                         world5.src='/world5-limited.js?v=1';
                         world5.async=false;
                         world5.onerror=()=>console.error('Could not load World 5 integration');
+                        world5.onload=()=>{
+                          const events=d.createElement('script');
+                          events.src='/events-rewards.js?v=1';
+                          events.async=false;
+                          events.onerror=()=>console.error('Could not load events and rewards integration');
+                          d.body.appendChild(events);
+                        };
                         d.body.appendChild(world5);
                       };
                       d.body.appendChild(auth);
