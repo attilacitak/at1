@@ -41,13 +41,25 @@
     `;
   }
 
+  function loadWorld6Balance(){
+    if(window.__needohWorld6Balanced||document.querySelector('script[data-needoh-world6-balance]'))return;
+    const b=document.createElement('script');
+    b.src='/world6-balance.js?v=1';
+    b.async=false;
+    b.dataset.needohWorld6Balance='1';
+    b.onerror=()=>console.error('Could not load World 6 balance');
+    document.body.appendChild(b);
+  }
+
   function loadMegaUpdate(){
-    if(window.__needohMegaUpdateLoaded||document.querySelector('script[data-needoh-mega]'))return;
+    if(window.__needohMegaUpdateLoaded){loadWorld6Balance();return}
+    if(document.querySelector('script[data-needoh-mega]'))return;
     const s=document.createElement('script');
-    s.src='/mega-update.js?v=1';
+    s.src='/mega-update.js?v=2';
     s.async=false;
     s.dataset.needohMega='1';
     s.onerror=()=>console.error('Could not load Needoh Mega Update');
+    s.onload=loadWorld6Balance;
     document.body.appendChild(s);
   }
 
