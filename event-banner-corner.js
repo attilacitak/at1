@@ -41,19 +41,33 @@
     `;
   }
 
+  function loadMegaExpansion2(){
+    if(window.__needohMegaExpansion2Loaded||document.querySelector('script[data-needoh-mega2]'))return;
+    const x=document.createElement('script');
+    x.src='/mega-update-2.js?v=1';
+    x.async=false;
+    x.dataset.needohMega2='1';
+    x.onerror=()=>console.error('Could not load Needoh Mega+ Expansion');
+    document.body.appendChild(x);
+  }
+
   function loadWorld6Balance(){
-    if(window.__needohWorld6Balanced||document.querySelector('script[data-needoh-world6-balance]'))return;
+    if(window.__needohWorld6Balanced){loadMegaExpansion2();return}
+    const existing=document.querySelector('script[data-needoh-world6-balance]');
+    if(existing){existing.addEventListener('load',loadMegaExpansion2,{once:true});return}
     const b=document.createElement('script');
     b.src='/world6-balance.js?v=1';
     b.async=false;
     b.dataset.needohWorld6Balance='1';
     b.onerror=()=>console.error('Could not load World 6 balance');
+    b.onload=loadMegaExpansion2;
     document.body.appendChild(b);
   }
 
   function loadMegaUpdate(){
     if(window.__needohMegaUpdateLoaded){loadWorld6Balance();return}
-    if(document.querySelector('script[data-needoh-mega]'))return;
+    const existing=document.querySelector('script[data-needoh-mega]');
+    if(existing){existing.addEventListener('load',loadWorld6Balance,{once:true});return}
     const s=document.createElement('script');
     s.src='/mega-update.js?v=2';
     s.async=false;
