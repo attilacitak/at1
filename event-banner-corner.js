@@ -41,13 +41,26 @@
     `;
   }
 
+  function loadCosmeticsPvp(){
+    if(window.__needohCosmeticsPvpLoaded||document.querySelector('script[data-needoh-cosmetics-pvp]'))return;
+    const p=document.createElement('script');
+    p.src='/cosmetics-pvp.js?v=1';
+    p.async=false;
+    p.dataset.needohCosmeticsPvp='1';
+    p.onerror=()=>console.error('Could not load cosmetics and PvP update');
+    document.body.appendChild(p);
+  }
+
   function loadMegaExpansion2(){
-    if(window.__needohMegaExpansion2Loaded||document.querySelector('script[data-needoh-mega2]'))return;
+    if(window.__needohMegaExpansion2Loaded){loadCosmeticsPvp();return}
+    const existing=document.querySelector('script[data-needoh-mega2]');
+    if(existing){existing.addEventListener('load',loadCosmeticsPvp,{once:true});return}
     const x=document.createElement('script');
     x.src='/mega-update-2.js?v=1';
     x.async=false;
     x.dataset.needohMega2='1';
     x.onerror=()=>console.error('Could not load Needoh Mega+ Expansion');
+    x.onload=loadCosmeticsPvp;
     document.body.appendChild(x);
   }
 
