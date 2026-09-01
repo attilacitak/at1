@@ -52,11 +52,11 @@
   }
 
   function loadAdventureProgressFix(){
-    if(window.__needohAdventureProgressFixLoaded){loadLivePvpInvites();return}
+    if(window.__needohAdventureProgressFixV2Loaded){loadLivePvpInvites();return}
     const existing=document.querySelector('script[data-needoh-adventure-progress-fix]');
     if(existing){existing.addEventListener('load',loadLivePvpInvites,{once:true});return}
     const f=document.createElement('script');
-    f.src='/adventure-progress-fix.js?v=1';
+    f.src='/adventure-progress-fix.js?v=2';
     f.async=false;
     f.dataset.needohAdventureProgressFix='1';
     f.onerror=()=>console.error('Could not load Adventure progression fix');
