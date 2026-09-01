@@ -31,7 +31,7 @@
     if(b){
       cleared=Math.max(cleared,Math.max(0,Math.min(30,Number(b.cleared)||0)));
       stage=Math.max(stage,Math.max(1,Math.min(30,Number(b.stage)||1)));
-      if(stage===Number(b.stage)&&Number(b.hp)>0)hp=Math.max(hp,Number(b.hp)||0);
+      if(hp<=0&&stage===Number(b.stage)&&Number(b.hp)>0)hp=Number(b.hp)||0;
     }
     if(cleared<30&&stage<=cleared)stage=cleared+1;
     if(cleared>=30)stage=30;
@@ -95,7 +95,7 @@
   function attack(){
     const a=progress();
     const stage=Math.max(1,Math.min(30,Number(a.stage)||1));
-    if(a.cleared>=30){a.stage=30;a.hp=0;saveAll();return show()}
+    if(a.cleared>=30){a.stage=30;a.hp=0;writeBackup(a);saveAll();return show()}
     if(!a.hp||a.hp<=0)a.hp=maxHp(stage);
     a.hp=Math.max(0,a.hp-hitPower());
 
@@ -110,9 +110,12 @@
         try{toast(`🗺️ Stage ${stage} cleared! Stage ${a.stage} unlocked! +${fmt(coins)} coins`)}catch(_){}
       }else{
         a.stage=30;a.hp=0;writeBackup(a);saveAll();
-        try{toast('🏆 Adventure Mode completed!') }catch(_){}
+        try{toast('🏆 Adventure Mode completed!')}catch(_){}
       }
-    }else saveAll();
+    }else{
+      writeBackup(a);
+      saveAll();
+    }
     show();
   }
 
@@ -129,11 +132,11 @@
       const a=progress();
       let stage=Math.max(1,Math.min(30,Number(a.stage)||1));
       if(a.cleared<30&&stage<=a.cleared){stage=a.cleared+1;a.stage=stage;a.hp=maxHp(stage);writeBackup(a)}
-      if(!a.hp&&a.cleared<30)a.hp=maxHp(stage);
+      if(!a.hp&&a.cleared<30){a.hp=maxHp(stage);writeBackup(a)}
       const e=enemy(stage),max=maxHp(stage),pct=a.cleared>=30&&stage===30?0:Math.max(0,Math.min(100,(Number(a.hp)||0)/max*100));
-      const map=Array.from({length:30},(_,i)=>i+1).map(n=>{const en=enemy(n),locked=n>Math.min(30,(Number(a.cleared)||0)+1),done=n<=Number(a.cleared)||0,current=n===stage&&!locked;return `<button class="sx-stage ${locked?'locked':''} ${en.boss?'boss':''}" data-advfix-stage="${n}" ${locked?'disabled':''}><b>${en.boss?'👹':'🫧'} ${n}</b><span class="small">${done?'✅':current?'⚔️':''}</span></button>`}).join('');
-      const done=a.cleared>=30;
-      openHub('🗺️ Adventure Mode',`<div id="advFixRoot"><div class="notice">30 stages total. Beat a stage to immediately unlock the next one. Progress is saved separately so it cannot fall back to Stage 1.</div><div class="sx-card" style="text-align:center"><h2>${done?'🏆 Adventure Complete':`${e.boss?'👹':'🫧'} ${escapeHtml(e.name)}`}</h2><div class="sx-tag">${e.zone} · Stage ${stage}</div>${done?'<p>All 30 stages cleared.</p>':`<div class="sx-meter" style="margin:12px 0"><div style="width:${pct}%"></div></div><b>${fmt(a.hp)} / ${fmt(max)} HP</b><div class="small">Your hit: ~${fmt(hitPower())}</div><button class="btn danger" id="advFixAttack">⚔️ ATTACK</button>`}</div><h3>Adventure Map — ${a.cleared}/30 cleared</h3><div class="sx-map">${map}</div></div>`);
+      const map=Array.from({length:30},(_,i)=>i+1).map(n=>{const en=enemy(n),locked=n>Math.min(30,(Number(a.cleared)||0)+1),cleared=n<=Number(a.cleared)||0,current=n===stage&&!locked;return `<button class="sx-stage ${locked?'locked':''} ${en.boss?'boss':''}" data-advfix-stage="${n}" ${locked?'disabled':''}><b>${en.boss?'👹':'🫧'} ${n}</b><span class="small">${cleared?'✅':current?'⚔️':''}</span></button>`}).join('');
+      const complete=a.cleared>=30;
+      openHub('🗺️ Adventure Mode',`<div id="advFixRoot"><div class="notice">30 stages total. Beat a stage to immediately unlock the next one. Progress is saved separately so it cannot fall back to Stage 1.</div><div class="sx-card" style="text-align:center"><h2>${complete?'🏆 Adventure Complete':`${e.boss?'👹':'🫧'} ${escapeHtml(e.name)}`}</h2><div class="sx-tag">${e.zone} · Stage ${stage}</div>${complete?'<p>All 30 stages cleared.</p>':`<div class="sx-meter" style="margin:12px 0"><div style="width:${pct}%"></div></div><b>${fmt(a.hp)} / ${fmt(max)} HP</b><div class="small">Your hit: ~${fmt(hitPower())}</div><button class="btn danger" id="advFixAttack">⚔️ ATTACK</button>`}</div><h3>Adventure Map — ${a.cleared}/30 cleared</h3><div class="sx-map">${map}</div></div>`);
       const attackBtn=document.getElementById('advFixAttack');if(attackBtn)attackBtn.onclick=attack;
       document.querySelectorAll('[data-advfix-stage]').forEach(b=>b.onclick=()=>selectStage(Number(b.dataset.advfixStage)));
     }finally{setTimeout(()=>{drawing=false},20)}
