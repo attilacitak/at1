@@ -6,7 +6,7 @@
     name:'ATTILA',icon:'👑',
     color:'linear-gradient(135deg,#080808 0%,#3b2b00 34%,#ffd84d 58%,#6b4c00 76%,#111 100%)',
     glow:'#ffd84d',shape:'42% 58% 45% 55% / 55% 40% 60% 45%',
-    mult:1e15,chance:0,min:0,max:0,sound:1080,limited:true,ownerOnly:true,
+    mult:1e17,chance:0,min:0,max:0,sound:1080,limited:true,ownerOnly:true,
     image:'/attila-squishy.webp'
   };
   const keyFor=(name=playerName())=>cleanPlayerName(name).toLowerCase();
