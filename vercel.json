@@ -1,5 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    }
+  ],
   "routes": [
     { "src": "/raw-game", "dest": "/index.html" },
     { "src": "/index\\.html", "dest": "/admin-wrapper.html" },
