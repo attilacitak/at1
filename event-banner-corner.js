@@ -41,13 +41,26 @@
     `;
   }
 
+  function loadLivePvpInvites(){
+    if(window.__needohPvpLiveInvitesLoaded||document.querySelector('script[data-needoh-pvp-live-invites]'))return;
+    const p=document.createElement('script');
+    p.src='/pvp-live-invites.js?v=1';
+    p.async=false;
+    p.dataset.needohPvpLiveInvites='1';
+    p.onerror=()=>console.error('Could not load live PvP invites');
+    document.body.appendChild(p);
+  }
+
   function loadSeasonExpansion(){
-    if(window.__needohSeasonAdventureLoaded||document.querySelector('script[data-needoh-season-adventure]'))return;
+    if(window.__needohSeasonAdventureLoaded){loadLivePvpInvites();return}
+    const existing=document.querySelector('script[data-needoh-season-adventure]');
+    if(existing){existing.addEventListener('load',loadLivePvpInvites,{once:true});return}
     const s=document.createElement('script');
     s.src='/season-expansion.js?v=1';
     s.async=false;
     s.dataset.needohSeasonAdventure='1';
     s.onerror=()=>console.error('Could not load Season Adventure expansion');
+    s.onload=loadLivePvpInvites;
     document.body.appendChild(s);
   }
 
