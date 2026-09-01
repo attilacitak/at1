@@ -41,13 +41,26 @@
     `;
   }
 
+  function loadSeasonExpansion(){
+    if(window.__needohSeasonAdventureLoaded||document.querySelector('script[data-needoh-season-adventure]'))return;
+    const s=document.createElement('script');
+    s.src='/season-expansion.js?v=1';
+    s.async=false;
+    s.dataset.needohSeasonAdventure='1';
+    s.onerror=()=>console.error('Could not load Season Adventure expansion');
+    document.body.appendChild(s);
+  }
+
   function loadCosmeticsPvp(){
-    if(window.__needohCosmeticsPvpLoaded||document.querySelector('script[data-needoh-cosmetics-pvp]'))return;
+    if(window.__needohCosmeticsPvpLoaded){loadSeasonExpansion();return}
+    const existing=document.querySelector('script[data-needoh-cosmetics-pvp]');
+    if(existing){existing.addEventListener('load',loadSeasonExpansion,{once:true});return}
     const p=document.createElement('script');
     p.src='/cosmetics-pvp.js?v=1';
     p.async=false;
     p.dataset.needohCosmeticsPvp='1';
     p.onerror=()=>console.error('Could not load cosmetics and PvP update');
+    p.onload=loadSeasonExpansion;
     document.body.appendChild(p);
   }
 
