@@ -51,29 +51,29 @@
     document.body.appendChild(p);
   }
 
-  function loadAdventureProgressFix(){
-    if(window.__needohAdventureProgressFixV2Loaded){loadLivePvpInvites();return}
-    const existing=document.querySelector('script[data-needoh-adventure-progress-fix]');
+  function loadAdventureFinal(){
+    if(window.__needohAdventureFinalLoaded){loadLivePvpInvites();return}
+    const existing=document.querySelector('script[data-needoh-adventure-final]');
     if(existing){existing.addEventListener('load',loadLivePvpInvites,{once:true});return}
     const f=document.createElement('script');
-    f.src='/adventure-progress-fix.js?v=2';
+    f.src='/adventure-final-fix.js?v=1';
     f.async=false;
-    f.dataset.needohAdventureProgressFix='1';
-    f.onerror=()=>console.error('Could not load Adventure progression fix');
+    f.dataset.needohAdventureFinal='1';
+    f.onerror=()=>console.error('Could not load final Adventure progression fix');
     f.onload=loadLivePvpInvites;
     document.body.appendChild(f);
   }
 
   function loadSeasonExpansion(){
-    if(window.__needohSeasonAdventureLoaded){loadAdventureProgressFix();return}
+    if(window.__needohSeasonAdventureLoaded){loadAdventureFinal();return}
     const existing=document.querySelector('script[data-needoh-season-adventure]');
-    if(existing){existing.addEventListener('load',loadAdventureProgressFix,{once:true});return}
+    if(existing){existing.addEventListener('load',loadAdventureFinal,{once:true});return}
     const s=document.createElement('script');
-    s.src='/season-expansion.js?v=1';
+    s.src='/season-expansion.js?v=2';
     s.async=false;
     s.dataset.needohSeasonAdventure='1';
     s.onerror=()=>console.error('Could not load Season Adventure expansion');
-    s.onload=loadAdventureProgressFix;
+    s.onload=loadAdventureFinal;
     document.body.appendChild(s);
   }
 
