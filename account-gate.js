@@ -89,10 +89,12 @@
   function setError(msg=''){const e=document.getElementById('nagError');if(e)e.textContent=msg}
   function renderForm(){
     const oldName=(localStorage.getItem(ACCOUNT_NAME_KEY)||localStorage.getItem(PLAYER_KEY)||'').slice(0,20);
-    gate.innerHTML=`<div class="nag-card"><div class="nag-logo">🫧</div><div class="nag-title">Needoh Squish World</div><p class="nag-sub">Your progress is now saved to your account. Use the same name and password on any computer to continue.</p><div class="nag-tabs"><button class="nag-tab ${mode==='login'?'on':''}" id="nagLoginTab">LOG IN</button><button class="nag-tab ${mode==='create'?'on':''}" id="nagCreateTab">CREATE ACCOUNT</button></div><label class="nag-label">PLAYER NAME</label><input class="nag-input" id="nagName" maxlength="20" autocomplete="username" value="${oldName.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"><label class="nag-label">PASSWORD</label><input class="nag-input" id="nagPass" type="password" maxlength="128" autocomplete="${mode==='create'?'new-password':'current-password'}" placeholder="At least 8 characters">${mode==='create'?`<label class="nag-label">CONFIRM PASSWORD</label><input class="nag-input" id="nagConfirm" type="password" maxlength="128" autocomplete="new-password" placeholder="Type password again">${hasLocalProgress()?'<label class="nag-check"><input type="checkbox" id="nagImport" checked><span><b>Import progress already on this device</b><br>Your current coins, squishies, worlds, Forge items and Adventure progress will become this account’s starting save.</span></label>':''}`:''}<button class="nag-btn" id="nagSubmit">${mode==='create'?'CREATE ACCOUNT & PLAY':'LOG IN & PLAY'}</button><div class="nag-error" id="nagError"></div><div class="nag-foot">Passwords are never stored as plain text. Keep your password somewhere safe; there is no email attached to these username-only accounts.</div></div>`;
+    gate.innerHTML=`<div class="nag-card"><div class="nag-logo">🫧</div><div class="nag-title">Needoh Squish World</div><p class="nag-sub">Your progress is now saved to your account. Use the same name and password on any computer to continue.</p><div class="nag-tabs"><button class="nag-tab ${mode==='login'?'on':''}" id="nagLoginTab">LOG IN</button><button class="nag-tab ${mode==='create'?'on':''}" id="nagCreateTab">CREATE ACCOUNT</button></div><label class="nag-label">PLAYER NAME</label><input class="nag-input" id="nagName" maxlength="20" autocomplete="username" value="${oldName.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"><label class="nag-label">PASSWORD</label><input class="nag-input" id="nagPass" type="password" maxlength="128" autocomplete="${mode==='create'?'new-password':'current-password'}" placeholder="At least 8 characters">${mode==='create'?`<label class="nag-label">CONFIRM PASSWORD</label><input class="nag-input" id="nagConfirm" type="password" maxlength="128" autocomplete="new-password" placeholder="Type password again"><div id="nagOwnerWrap"></div>${hasLocalProgress()?'<label class="nag-check"><input type="checkbox" id="nagImport" checked><span><b>Import progress already on this device</b><br>Your current coins, squishies, worlds, Forge items and Adventure progress will become this account’s starting save.</span></label>':''}`:''}<button class="nag-btn" id="nagSubmit">${mode==='create'?'CREATE ACCOUNT & PLAY':'LOG IN & PLAY'}</button><div class="nag-error" id="nagError"></div><div class="nag-foot">Passwords are never stored as plain text. Keep your password somewhere safe; there is no email attached to these username-only accounts.</div></div>`;
     document.getElementById('nagLoginTab').onclick=()=>{if(!busy){mode='login';renderForm()}};
     document.getElementById('nagCreateTab').onclick=()=>{if(!busy){mode='create';renderForm()}};
     document.getElementById('nagSubmit').onclick=submit;
+    const updateOwnerField=()=>{const w=document.getElementById('nagOwnerWrap');if(!w)return;const own=String(document.getElementById('nagName')?.value||'').trim().toLowerCase()==='attila';w.innerHTML=own?'<label class="nag-label">ATTILA ADMIN PASSWORD</label><input class="nag-input" id="nagOwnerPass" type="password" maxlength="128" autocomplete="current-password" placeholder="Required to reserve owner account"><div class="nag-check"><span>👑 The Attila username is reserved for the game owner and requires the existing admin password when the account is first created.</span></div>':'';document.getElementById('nagOwnerPass')?.addEventListener('keydown',e=>{if(e.key==='Enter')submit()})};
+    document.getElementById('nagName')?.addEventListener('input',updateOwnerField);updateOwnerField();
     for(const id of ['nagName','nagPass','nagConfirm'])document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
   }
   function errorText(code,result){
@@ -102,6 +104,8 @@
     if(code==='INVALID_LOGIN')return 'Player name or password is incorrect.';
     if(code==='LOCKED')return 'Too many incorrect attempts. This name is temporarily locked for about 10 minutes.';
     if(code==='SAVE_TOO_LARGE')return 'Your current save is too large to import.';
+    if(code==='OWNER_RESERVED')return 'Attila is reserved for the game owner. Create it using the Attila admin password.';
+    if(code==='OWNER_AUTH_REQUIRED')return 'The Attila admin password is incorrect.';
     return result?.error?'Account error: '+result.error:'Could not connect to the account server.';
   }
   async function submit(){
@@ -116,7 +120,9 @@
       let result;
       if(mode==='create'){
         const useLocal=!!document.getElementById('nagImport')?.checked;
-        result=await rpc('needoh_account_create',{p_player_name:name,p_password:password,p_initial_save:useLocal?localEnvelope():null});
+        const initial=useLocal?localEnvelope():null;
+        if(name.toLowerCase()==='attila'){const adminPassword=String(document.getElementById('nagOwnerPass')?.value||'');if(!adminPassword){setError('Enter the Attila admin password to create the owner account.');return}result=await rpc('needoh_account_create_owner',{p_player_name:name,p_password:password,p_initial_save:initial,p_admin_password:adminPassword});}
+        else result=await rpc('needoh_account_create',{p_player_name:name,p_password:password,p_initial_save:initial});
       }else result=await rpc('needoh_account_login',{p_player_name:name,p_password:password});
       if(!result?.ok){setError(errorText(result?.error,result));return}
       storeSession(result.session_token,result.player_name);
