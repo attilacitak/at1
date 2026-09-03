@@ -2,6 +2,21 @@
 if(window.__needohAuctionPopupFixLoaded)return;
 let installed=false;
 
+function isAuctionTitle(){
+  return String(document.getElementById('hubTitle')?.textContent||'')==='🔨 Auction House';
+}
+
+function stopClosedAuctionLoop(){
+  const modal=document.getElementById('hubModal');
+  const title=document.getElementById('hubTitle');
+  if(!modal||!title)return;
+  // The original Auction module refreshes every ~1.8s by checking only hubTitle.
+  // Clear that hidden title as soon as the modal closes so its timer cannot reopen it.
+  if(!modal.classList.contains('show')&&String(title.textContent||'')==='🔨 Auction House'){
+    title.textContent='';
+  }
+}
+
 function install(){
   if(installed||typeof window.openHub!=='function')return false;
   const original=window.openHub;
@@ -23,7 +38,7 @@ function install(){
           /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)
         );
 
-        // Do not wipe out a bid while the player is typing it.
+        // Never erase a bid while the player is typing it.
         if(editing)return;
 
         const card=modal.querySelector('.modal-card');
@@ -65,12 +80,24 @@ function addRefreshButton(){
 }
 
 install();
+
+// Capture the Auction close button. The normal close handler still runs; this only
+// clears the stale title immediately afterward so the old refresh timer stops.
+document.addEventListener('click',e=>{
+  const close=e.target?.closest?.('#hubClose,.close-x');
+  if(!close||!isAuctionTitle())return;
+  queueMicrotask(stopClosedAuctionLoop);
+},true);
+
 new MutationObserver(()=>{
   install();
+  stopClosedAuctionLoop();
   addRefreshButton();
 }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+
 setInterval(()=>{
   install();
+  stopClosedAuctionLoop();
   addRefreshButton();
 },1000);
 
