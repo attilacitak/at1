@@ -2,17 +2,31 @@
 if(window.__needohAuctionPopupFixLoaded)return;
 let installed=false;
 
-function isAuctionTitle(){
-  return String(document.getElementById('hubTitle')?.textContent||'')==='🔨 Auction House';
-}
+const managed={
+  '🔨 Auction House':{
+    buttonId:'auctionManualRefresh',
+    rowId:'auctionRefreshRow',
+    label:'↻ Refresh Auctions',
+    refresh:()=>window.__needohAuctions?.show?.()
+  },
+  '🏆 Soccer Tournaments':{
+    buttonId:'tournamentManualRefresh',
+    rowId:'tournamentRefreshRow',
+    label:'↻ Refresh Tournaments',
+    refresh:()=>window.__needohMinigames?.tournaments?.()
+  }
+};
 
-function stopClosedAuctionLoop(){
+function titleText(){return String(document.getElementById('hubTitle')?.textContent||'')}
+function isManagedTitle(t=titleText()){return !!managed[t]}
+
+function stopClosedRefreshLoop(){
   const modal=document.getElementById('hubModal');
   const title=document.getElementById('hubTitle');
   if(!modal||!title)return;
-  // The original Auction module refreshes every ~1.8s by checking only hubTitle.
-  // Clear that hidden title as soon as the modal closes so its timer cannot reopen it.
-  if(!modal.classList.contains('show')&&String(title.textContent||'')==='🔨 Auction House'){
+  // Auction and Tournament modules both use timers that check only hubTitle.
+  // When the modal closes, clear the stale title so those timers cannot reopen it.
+  if(!modal.classList.contains('show')&&isManagedTitle(String(title.textContent||''))){
     title.textContent='';
   }
 }
@@ -22,13 +36,14 @@ function install(){
   const original=window.openHub;
 
   window.openHub=function(title,html){
-    if(String(title)==='🔨 Auction House'){
+    const name=String(title);
+    if(managed[name]){
       const modal=document.getElementById('hubModal');
       const currentTitle=document.getElementById('hubTitle');
       const content=document.getElementById('hubContent');
       const alreadyOpen=!!(
         modal&&content&&modal.classList.contains('show')&&
-        String(currentTitle?.textContent||'')==='🔨 Auction House'
+        String(currentTitle?.textContent||'')===name
       );
 
       if(alreadyOpen){
@@ -38,7 +53,7 @@ function install(){
           /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)
         );
 
-        // Never erase a bid while the player is typing it.
+        // Never erase a bid, form field, or focused control while the player is using it.
         if(editing)return;
 
         const card=modal.querySelector('.modal-card');
@@ -58,21 +73,22 @@ function install(){
 
 function addRefreshButton(){
   const modal=document.getElementById('hubModal');
-  const title=document.getElementById('hubTitle');
+  const title=titleText();
   const content=document.getElementById('hubContent');
-  if(!modal?.classList.contains('show')||String(title?.textContent||'')!=='🔨 Auction House'||!content)return;
-  if(document.getElementById('auctionManualRefresh'))return;
+  const cfg=managed[title];
+  if(!cfg||!modal?.classList.contains('show')||!content)return;
+  if(document.getElementById(cfg.buttonId))return;
 
   const row=document.createElement('div');
-  row.id='auctionRefreshRow';
+  row.id=cfg.rowId;
   row.style.cssText='display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px';
 
   const button=document.createElement('button');
-  button.id='auctionManualRefresh';
+  button.id=cfg.buttonId;
   button.className='btn';
-  button.textContent='↻ Refresh Auctions';
+  button.textContent=cfg.label;
   button.onclick=()=>{
-    try{window.__needohAuctions?.show?.()}catch(e){console.warn('Auction refresh failed',e)}
+    try{cfg.refresh()}catch(e){console.warn(title+' refresh failed',e)}
   };
 
   row.appendChild(button);
@@ -81,23 +97,23 @@ function addRefreshButton(){
 
 install();
 
-// Capture the Auction close button. The normal close handler still runs; this only
-// clears the stale title immediately afterward so the old refresh timer stops.
+// The normal close handler still runs. This capture listener only clears the
+// stale title immediately afterward so the module's own refresh timer stops.
 document.addEventListener('click',e=>{
   const close=e.target?.closest?.('#hubClose,.close-x');
-  if(!close||!isAuctionTitle())return;
-  queueMicrotask(stopClosedAuctionLoop);
+  if(!close||!isManagedTitle())return;
+  queueMicrotask(stopClosedRefreshLoop);
 },true);
 
 new MutationObserver(()=>{
   install();
-  stopClosedAuctionLoop();
+  stopClosedRefreshLoop();
   addRefreshButton();
 }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 
 setInterval(()=>{
   install();
-  stopClosedAuctionLoop();
+  stopClosedRefreshLoop();
   addRefreshButton();
 },1000);
 
