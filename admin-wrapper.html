@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Needoh Squish World</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#11162a}#game{display:block;width:100%;height:100%;border:0;background:#11162a}</style>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#11162a}#game{display:block;width:100%;height:100%;border:0;background:#11162a;pointer-events:auto;position:relative;z-index:1}</style>
 </head>
 <body>
-<iframe id="game" src="about:blank" title="Needoh Squish World"></iframe>
-<script src="/account-gate.js?v=1"></script>
+<iframe id="game" src="about:blank" title="Needoh Squish World" tabindex="0"></iframe>
+<script src="/account-gate.js?v=2"></script>
 <script>
 const gameFrame=document.getElementById('game');
 const scripts=[
@@ -23,7 +23,13 @@ function loadScripts(d,i=0){
 }
 gameFrame.addEventListener('load',()=>{
  if(!String(gameFrame.getAttribute('src')||'').startsWith('/raw-game'))return;
+ const blocker=document.getElementById('needohAccountGate');
+ if(blocker){blocker.style.pointerEvents='none';blocker.remove();}
+ gameFrame.style.visibility='visible';
+ gameFrame.style.pointerEvents='auto';
+ gameFrame.removeAttribute('inert');
  try{loadScripts(gameFrame.contentDocument)}catch(e){console.error('Could not load game integration',e)}
+ setTimeout(()=>{try{gameFrame.contentWindow.focus()}catch(_){}},50);
 });
 </script>
 </body>
