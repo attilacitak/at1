@@ -10,7 +10,7 @@
 <iframe id="game" src="about:blank" title="Needoh Squish World"></iframe>
 <script src="/account-gate.js?v=1"></script>
 <script>
-const game=document.getElementById('game');
+const gameFrame=document.getElementById('game');
 const scripts=[
 '/online.js?v=2','/admin-take.js?v=2','/broadcast.js?v=1','/global-codes.js?v=1','/mystery-wheel.js?v=1','/coin-rush.js?v=2','/boss-cinematic.js?v=1','/admin-grants.js?v=1','/kick-players.js?v=1','/admin-auth.js?v=1','/world5-limited.js?v=1','/events-rewards.js?v=2','/social-admin.js?v=2','/enhanced-boxes.js?v=2','/enhanced-boss.js?v=1','/attila-squishy.js?v=3','/attila-face-fix.js?v=3','/final-fixes.js?v=1','/event-banner-corner.js?v=6','/account-sync.js?v=1'
 ];
@@ -21,9 +21,9 @@ function loadScripts(d,i=0){
  s.onerror=()=>{console.error('Could not load',scripts[i]);loadScripts(d,i+1)};
  d.body.appendChild(s);
 }
-game.addEventListener('load',()=>{
- if(!String(game.getAttribute('src')||'').startsWith('/raw-game'))return;
- try{loadScripts(game.contentDocument)}catch(e){console.error('Could not load game integration',e)}
+gameFrame.addEventListener('load',()=>{
+ if(!String(gameFrame.getAttribute('src')||'').startsWith('/raw-game'))return;
+ try{loadScripts(gameFrame.contentDocument)}catch(e){console.error('Could not load game integration',e)}
 });
 </script>
 </body>
