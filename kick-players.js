@@ -4,8 +4,10 @@
   const headers={apikey:SB_KEY,'Content-Type':'application/json'};
   const ownerAdmin=()=>playerName().toLowerCase()==='attila';
   const keyFor=(name=playerName())=>cleanPlayerName(name).toLowerCase();
+  const JAIL_PREFIX='ATTILA_JAIL:';
   let checking=false;
   let activeKickId='';
+  let jailTimer=null;
 
   async function api(path,opts={}){
     const r=await fetch(`${SB_URL}/rest/v1/${path}`,{...opts,headers:{...headers,...(opts.headers||{})}});
@@ -19,8 +21,39 @@
   function seenKickId(){return localStorage.getItem(seenStorageKey())||''}
   function markKickSeen(id){if(id)localStorage.setItem(seenStorageKey(),String(id))}
 
+  function showAttilaJail(kick){
+    if(!kick?.id)return;
+    activeKickId=String(kick.id);
+    try{if(typeof stopHold==='function')stopHold()}catch(e){}
+    try{closeHub()}catch(e){}
+    document.getElementById('needohKickScreen')?.remove();
+    document.getElementById('needohAdminJailScreen')?.remove();
+    clearInterval(jailTimer);
+
+    const created=Date.parse(kick.created_at)||Date.now();
+    const until=created+60000;
+    if(until<=Date.now()){markKickSeen(activeKickId);activeKickId='';return}
+
+    const overlay=document.createElement('div');
+    overlay.id='needohAdminJailScreen';
+    Object.assign(overlay.style,{position:'fixed',inset:'0',zIndex:'2147483647',background:'radial-gradient(circle at 50% 20%,#3d4156,#13141b 58%,#07070a)',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px',boxSizing:'border-box',color:'#fff',textAlign:'center'});
+    const reason=String(kick.reason||'').slice(JAIL_PREFIX.length).trim()||'Sent to Attila Jail';
+    overlay.innerHTML=`<div style="width:min(720px,100%);padding:34px 26px;border-radius:28px;background:rgba(0,0,0,.52);border:2px solid #ffd95e;box-shadow:0 30px 100px rgba(0,0,0,.7),0 0 55px rgba(255,217,94,.18)"><div style="font-size:76px">🚔 🔒</div><div style="font-size:clamp(34px,7vw,68px);font-weight:1000;color:#ffd95e">ATTILA JAIL</div><div style="font-size:18px;font-weight:850;margin-top:14px">Attila sent you to jail for 1 minute.</div><div style="margin:14px auto;color:#ddd;max-width:600px">${escapeHtml(reason)}</div><div id="needohAdminJailCountdown" style="font-size:clamp(44px,9vw,92px);font-weight:1000;margin:12px 0">1:00</div><div class="small">You will automatically return to the game when the timer reaches 0:00.</div></div>`;
+    document.body.appendChild(overlay);
+
+    const tick=()=>{
+      const left=until-Date.now();
+      const s=Math.max(0,Math.ceil(left/1000));
+      const el=document.getElementById('needohAdminJailCountdown');
+      if(el)el.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+      if(left<=0){clearInterval(jailTimer);jailTimer=null;markKickSeen(activeKickId);activeKickId='';overlay.remove();toast('🔓 Released from Attila Jail')}
+    };
+    tick();jailTimer=setInterval(tick,200);
+  }
+
   function showKickScreen(kick){
     if(!kick?.id)return;
+    if(String(kick.reason||'').startsWith(JAIL_PREFIX))return showAttilaJail(kick);
     activeKickId=String(kick.id);
     try{if(typeof stopHold==='function')stopHold()}catch(e){}
     try{closeHub()}catch(e){}
@@ -28,45 +61,16 @@
 
     const overlay=document.createElement('div');
     overlay.id='needohKickScreen';
-    Object.assign(overlay.style,{
-      position:'fixed',inset:'0',zIndex:'2147483647',background:'radial-gradient(circle at 50% 25%,#53152b 0,#210a15 46%,#08060a 100%)',
-      display:'flex',alignItems:'center',justifyContent:'center',padding:'24px',boxSizing:'border-box',color:'#fff',textAlign:'center'
-    });
-
+    Object.assign(overlay.style,{position:'fixed',inset:'0',zIndex:'2147483647',background:'radial-gradient(circle at 50% 25%,#53152b 0,#210a15 46%,#08060a 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px',boxSizing:'border-box',color:'#fff',textAlign:'center'});
     const card=document.createElement('div');
-    Object.assign(card.style,{
-      width:'min(760px,100%)',padding:'34px 26px',borderRadius:'28px',background:'rgba(0,0,0,.42)',
-      border:'2px solid rgba(255,88,120,.65)',boxShadow:'0 25px 100px rgba(0,0,0,.65),0 0 60px rgba(255,45,90,.25)'
-    });
-
-    const boot=document.createElement('div');
-    boot.textContent='👢';
-    Object.assign(boot.style,{fontSize:'76px',marginBottom:'8px'});
-
-    const title=document.createElement('div');
-    title.textContent='YOU HAVE BEEN KICKED';
-    Object.assign(title.style,{fontSize:'clamp(30px,7vw,64px)',fontWeight:'1000',letterSpacing:'1px',color:'#ff708c',textShadow:'0 0 28px rgba(255,80,120,.45)'});
-
-    const by=document.createElement('div');
-    by.textContent='You have been kicked by Attila for:';
-    Object.assign(by.style,{fontSize:'clamp(17px,3vw,25px)',fontWeight:'850',marginTop:'18px',color:'#ffd6df'});
-
-    const reason=document.createElement('div');
-    reason.textContent=`“${String(kick.reason||'No reason provided')}”`;
-    Object.assign(reason.style,{fontSize:'clamp(22px,4vw,38px)',lineHeight:'1.25',fontWeight:'1000',margin:'18px auto 24px',maxWidth:'660px',whiteSpace:'pre-wrap',wordBreak:'break-word'});
-
-    const note=document.createElement('div');
-    note.textContent='This is only a kick — you are not banned.';
-    Object.assign(note.style,{fontSize:'14px',color:'#d8c7ce',marginBottom:'18px'});
-
-    const btn=document.createElement('button');
-    btn.textContent='↻ REJOIN GAME';
-    Object.assign(btn.style,{border:'0',borderRadius:'16px',padding:'15px 26px',fontSize:'19px',fontWeight:'1000',cursor:'pointer',background:'linear-gradient(135deg,#ff7a94,#ffb449)',color:'#2a1016',boxShadow:'0 10px 32px rgba(0,0,0,.4)'});
-    btn.onclick=()=>{markKickSeen(activeKickId);location.reload()};
-
-    card.append(boot,title,by,reason,note,btn);
-    overlay.appendChild(card);
-    document.body.appendChild(overlay);
+    Object.assign(card.style,{width:'min(760px,100%)',padding:'34px 26px',borderRadius:'28px',background:'rgba(0,0,0,.42)',border:'2px solid rgba(255,88,120,.65)',boxShadow:'0 25px 100px rgba(0,0,0,.65),0 0 60px rgba(255,45,90,.25)'});
+    const boot=document.createElement('div');boot.textContent='👢';Object.assign(boot.style,{fontSize:'76px',marginBottom:'8px'});
+    const title=document.createElement('div');title.textContent='YOU HAVE BEEN KICKED';Object.assign(title.style,{fontSize:'clamp(30px,7vw,64px)',fontWeight:'1000',letterSpacing:'1px',color:'#ff708c',textShadow:'0 0 28px rgba(255,80,120,.45)'});
+    const by=document.createElement('div');by.textContent='You have been kicked by Attila for:';Object.assign(by.style,{fontSize:'clamp(17px,3vw,25px)',fontWeight:'850',marginTop:'18px',color:'#ffd6df'});
+    const reason=document.createElement('div');reason.textContent=`“${String(kick.reason||'No reason provided')}”`;Object.assign(reason.style,{fontSize:'clamp(22px,4vw,38px)',lineHeight:'1.25',fontWeight:'1000',margin:'18px auto 24px',maxWidth:'660px',whiteSpace:'pre-wrap',wordBreak:'break-word'});
+    const note=document.createElement('div');note.textContent='This is only a kick — you are not banned.';Object.assign(note.style,{fontSize:'14px',color:'#d8c7ce',marginBottom:'18px'});
+    const btn=document.createElement('button');btn.textContent='↻ REJOIN GAME';Object.assign(btn.style,{border:'0',borderRadius:'16px',padding:'15px 26px',fontSize:'19px',fontWeight:'1000',cursor:'pointer',background:'linear-gradient(135deg,#ff7a94,#ffb449)',color:'#2a1016',boxShadow:'0 10px 32px rgba(0,0,0,.4)'});btn.onclick=()=>{markKickSeen(activeKickId);location.reload()};
+    card.append(boot,title,by,reason,note,btn);overlay.appendChild(card);document.body.appendChild(overlay);
   }
 
   async function checkKick(){
@@ -77,9 +81,7 @@
       const rows=await api(`needoh_kicks?select=id,target_key,target_name,admin_name,reason,created_at&target_key=eq.${key}&order=created_at.desc&limit=1`);
       const latest=rows?.[0];
       if(latest&&String(latest.id)!==seenKickId()&&String(latest.id)!==activeKickId)showKickScreen(latest);
-    }catch(e){
-      console.warn('Kick check failed',e);
-    }finally{checking=false}
+    }catch(e){console.warn('Kick check failed',e)}finally{checking=false}
   }
 
   const previousShowAdmin=showAdmin;
@@ -95,35 +97,31 @@
       const card=document.createElement('div');
       card.className='card danger-box';
       card.style.marginTop='14px';
-      card.innerHTML=`<h3>👢 Kick Player</h3><p class="small">Kick someone out of their current game session. They are NOT banned and can rejoin immediately.</p><label class="small">Player</label><select class="field" id="kickPlayerSelect">${options||'<option value="">No other players found</option>'}</select><label class="small">Reason</label><textarea class="field" id="kickReason" maxlength="200" placeholder="Type the reason they are being kicked..."></textarea><button class="btn danger" id="kickPlayerBtn">👢 KICK PLAYER</button>`;
+      card.innerHTML=`<h3>👢 Kick / 🚔 Attila Jail</h3><p class="small">Kick someone immediately, or send them to Attila Jail for exactly 1 minute.</p><label class="small">Player</label><select class="field" id="kickPlayerSelect">${options||'<option value="">No other players found</option>'}</select><label class="small">Reason</label><textarea class="field" id="kickReason" maxlength="200" placeholder="Optional for jail; required for kick..."></textarea><div class="card-row"><button class="btn danger" id="kickPlayerBtn">👢 KICK PLAYER</button><button class="btn gold" id="jailPlayerBtn">🚔 JAIL PLAYER — 1 MIN</button></div>`;
       host.appendChild(card);
 
-      $('kickPlayerBtn').onclick=async()=>{
+      const sendAction=async(type)=>{
         const target=$('kickPlayerSelect').value;
-        const reason=String($('kickReason').value||'').trim().slice(0,200);
+        const rawReason=String($('kickReason').value||'').trim().slice(0,200);
         if(!target)return toast('Choose a player');
-        if(!reason)return toast('Enter a kick reason');
+        if(type==='kick'&&!rawReason)return toast('Enter a kick reason');
         const p=others.find(x=>x.player_key===target);
-        if(!confirm(`Kick ${p?.display_name||target} for “${reason}”?`))return;
+        const display=p?.display_name||target;
+        const reason=type==='jail'?`${JAIL_PREFIX}${rawReason||'Sent to Attila Jail'}`:rawReason;
+        if(!confirm(`${type==='jail'?'Jail':'Kick'} ${display}${type==='jail'?' for 1 minute':''}?`))return;
         try{
-          await api('needoh_kicks',{
-            method:'POST',headers:{Prefer:'return=minimal'},
-            body:JSON.stringify([{target_key:target,target_name:p?.display_name||target,admin_name:'Attila',reason}])
-          });
-          toast(`👢 ${p?.display_name||target} was kicked`);
+          await api('needoh_kicks',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify([{target_key:target,target_name:display,admin_name:'Attila',reason}])});
+          toast(type==='jail'?`🚔 ${display} sent to Attila Jail for 1 minute`:`👢 ${display} was kicked`);
           $('kickReason').value='';
-        }catch(e){
-          console.warn('Could not kick player',e);
-          toast('Could not kick player');
-        }
+        }catch(e){console.warn(`Could not ${type} player`,e);toast(`Could not ${type} player`)}
       };
-    }catch(e){
-      console.warn('Could not load kick controls',e);
-    }
+      $('kickPlayerBtn').onclick=()=>sendAction('kick');
+      $('jailPlayerBtn').onclick=()=>sendAction('jail');
+    }catch(e){console.warn('Could not load kick/jail controls',e)}
   };
 
   $('adminBtn').onclick=showAdmin;
   checkKick();
-  setInterval(checkKick,2000);
+  setInterval(checkKick,1000);
   window.__needohKickPlayersLoaded=true;
 })();
