@@ -1,6 +1,6 @@
 (() => {
-  if (window.__needohWorldDirectUnlockV29) return;
-  window.__needohWorldDirectUnlockV29 = true;
+  if (window.__needohWorldDirectUnlockV30) return;
+  window.__needohWorldDirectUnlockV30 = true;
 
   const SAVE_KEY='needohSquishWorldSaveV2';
   const WORLD_CONFIG={
@@ -28,11 +28,24 @@
   function readSave(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'null')||{}}catch(_){return {}}}
   function writeSave(data){try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));return true}catch(_){return false}}
 
-  function currentWorld(){
-    try{const w=Number(state?.world);if(Number.isFinite(w)&&w>0)return w}catch(_){}
+  function badgeWorld(){
     const badge=document.getElementById('worldBadge')?.textContent||'';
-    const m=badge.match(/World\s*(\d+)/i);if(m)return Number(m[1])||1;
-    const s=readSave();return Number(s.world)||1;
+    const m=badge.match(/World\s*(\d+)/i);
+    if(!m)return 0;
+    const w=Number(m[1]);
+    return WORLD_CONFIG[w]?w:0;
+  }
+
+  function currentWorld(){
+    const bw=badgeWorld();
+    if(bw)return bw;
+    try{
+      const w=Number(state?.world);
+      if(WORLD_CONFIG[w])return w;
+    }catch(_){}
+    const s=readSave();
+    const sw=Number(s.world);
+    return WORLD_CONFIG[sw]?sw:1;
   }
 
   function realBalance(){
@@ -76,26 +89,22 @@
 
   function directWorldChange(){
     const w=currentWorld();
-    const cfg=WORLD_CONFIG[w];
-    if(!cfg){
-      try{if(typeof toast==='function')toast('This world is not configured yet')}catch(_){}
-      return;
-    }
-
+    const cfg=WORLD_CONFIG[w]||WORLD_CONFIG[1];
     const balance=realBalance();
     const already=isUnlocked(cfg);
+
     if(!already&&cfg.threshold>0&&balance<cfg.threshold){
       let need=cfg.threshold;try{if(typeof fmt==='function')need=fmt(cfg.threshold)}catch(_){}
       try{if(typeof toast==='function')toast(`Reach ${need} coins first!`)}catch(_){}
       return;
     }
 
-    const changed=persistTarget(cfg,balance);
+    persistTarget(cfg,balance);
     try{if(typeof toast==='function')toast(already?`Entered ${cfg.label}`:`${cfg.label} unlocked!`)}catch(_){}
 
     setTimeout(()=>{
-      if(currentWorld()!==cfg.next||!changed)location.reload();
-    },120);
+      if(badgeWorld()!==cfg.next)location.reload();
+    },180);
   }
 
   window.addEventListener('click',e=>{
