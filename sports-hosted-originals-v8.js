@@ -1,6 +1,6 @@
 (() => {
-  if (window.__needohHostedSportsV8) return;
-  window.__needohHostedSportsV8 = true;
+  if (window.__needohHostedSportsV8Fixed) return;
+  window.__needohHostedSportsV8Fixed = true;
 
   const HOSTED = {
     basketball: {
@@ -13,11 +13,14 @@
     }
   };
 
+  document.getElementById('needohHostedSportsV8')?.remove();
+  document.getElementById('needohHostedSportsV8Styles')?.remove();
+
   const style = document.createElement('style');
   style.id = 'needohHostedSportsV8Styles';
   style.textContent = `
-    #needohHostedSportsV8{position:fixed;inset:0;z-index:9000;display:none;background:#070b16;color:#fff}
-    #needohHostedSportsV8.show{display:flex;flex-direction:column}
+    #needohHostedSportsV8{position:fixed;inset:0;z-index:9000;display:none;background:#070b16;color:#fff;pointer-events:none}
+    #needohHostedSportsV8.show{display:flex;flex-direction:column;pointer-events:auto}
     #needohHostedSportsV8Top{height:54px;flex:0 0 54px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#10172a;border-bottom:1px solid #ffffff20;box-sizing:border-box}
     #needohHostedSportsV8Title{font:900 16px system-ui,-apple-system,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #needohHostedSportsV8Spacer{flex:1}
@@ -38,13 +41,13 @@
       <div id="needohHostedSportsV8Spacer"></div>
       <a id="needohHostedSportsV8Open" class="needohHostedSportsV8Btn" href="#" target="_blank" rel="noopener noreferrer">Open Directly ↗</a>
     </div>
-    <iframe id="needohHostedSportsV8Frame" title="Hosted sports game" allow="fullscreen; autoplay; gamepad" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <iframe id="needohHostedSportsV8Frame" title="Hosted sports game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
   `;
   document.body.appendChild(shell);
 
-  const frame = document.getElementById('needohHostedSportsV8Frame');
-  const title = document.getElementById('needohHostedSportsV8Title');
-  const direct = document.getElementById('needohHostedSportsV8Open');
+  const frame = shell.querySelector('#needohHostedSportsV8Frame');
+  const title = shell.querySelector('#needohHostedSportsV8Title');
+  const direct = shell.querySelector('#needohHostedSportsV8Open');
 
   function closeHosted(){
     shell.classList.remove('show');
@@ -52,39 +55,39 @@
   }
 
   function openHosted(kind){
-    const game = HOSTED[kind];
-    if (!game) return;
-    title.textContent = game.title;
-    direct.href = game.url;
-    frame.src = game.url;
+    const chosen = HOSTED[kind];
+    if (!chosen) return;
+    title.textContent = chosen.title;
+    direct.href = chosen.url;
+    frame.src = chosen.url;
     shell.classList.add('show');
-    setTimeout(() => { try { frame.focus(); } catch (_) {} }, 250);
   }
 
-  document.getElementById('needohHostedSportsV8Close').addEventListener('click', closeHosted);
+  shell.querySelector('#needohHostedSportsV8Close').onclick = closeHosted;
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && shell.classList.contains('show')) {
-      e.preventDefault();
-      closeHosted();
-    }
-  }, true);
+    if (e.key === 'Escape' && shell.classList.contains('show')) closeHosted();
+  });
 
   function patchCards(){
-    const roots = ['#nsa4Menu','#nsa5Menu','#l2pMenu'];
-    for (const rootSel of roots){
+    for (const rootSel of ['#nsa4Menu','#nsa5Menu','#l2pMenu']) {
       const root = document.querySelector(rootSel);
       if (!root) continue;
       const b = root.querySelector('[data-game="basketball"]');
       const s = root.querySelector('[data-game="soccer"]');
-      const r = root.querySelector('[data-game="random"]');
-      if (b) b.innerHTML = '<b>🏀 Basket Random — Hosted Original</b><span>Uses the exact hosted Basket Random page you chose.</span><span class="needohHostedBadge">EXTERNAL HOSTED GAME</span>';
-      if (s) s.innerHTML = '<b>⚽ Soccer Random — Hosted Original</b><span>Uses the exact hosted Soccer Random page you chose.</span><span class="needohHostedBadge">EXTERNAL HOSTED GAME</span>';
-      if (r) r.innerHTML = '<b>🎲 Random Sport</b><span>Randomly chooses hosted Basketball/Soccer or your custom Kickball/Baseball.</span>';
+      if (b && b.dataset.hostedPatched !== '1') {
+        b.dataset.hostedPatched = '1';
+        b.innerHTML = '<b>🏀 Basket Random — Hosted</b><span>Opens the Basket Random page you chose.</span><span class="needohHostedBadge">HOSTED GAME</span>';
+      }
+      if (s && s.dataset.hostedPatched !== '1') {
+        s.dataset.hostedPatched = '1';
+        s.innerHTML = '<b>⚽ Soccer Random — Hosted</b><span>Opens the Soccer Random page you chose.</span><span class="needohHostedBadge">HOSTED GAME</span>';
+      }
     }
   }
 
   patchCards();
-  new MutationObserver(patchCards).observe(document.body,{childList:true,subtree:true});
+  setTimeout(patchCards, 500);
+  setTimeout(patchCards, 1500);
 
   document.addEventListener('click', e => {
     const card = e.target.closest?.('[data-game]');
@@ -92,20 +95,9 @@
     const menu = card.closest('#nsa4Menu,#nsa5Menu,#l2pMenu');
     if (!menu) return;
     const kind = card.dataset.game;
-    if (kind === 'basketball' || kind === 'soccer') {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      openHosted(kind);
-      return;
-    }
-    if (kind === 'random') {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      const choice = ['basketball','soccer','kickball','baseball'][Math.floor(Math.random()*4)];
-      if (choice === 'basketball' || choice === 'soccer') openHosted(choice);
-      else menu.querySelector(`[data-game="${choice}"]`)?.click();
-    }
+    if (kind !== 'basketball' && kind !== 'soccer') return;
+    e.preventDefault();
+    e.stopPropagation();
+    openHosted(kind);
   }, true);
 })();
